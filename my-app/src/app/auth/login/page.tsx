@@ -45,7 +45,7 @@ export default function LoginPage() {
         router.push("/") // Arahkan ke halaman utama setelah login
         router.refresh() // Refresh untuk memastikan state server diperbarui (penting untuk middleware)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Sign In Error",
         description: error.message || "An unexpected error occurred.",

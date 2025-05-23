@@ -42,7 +42,7 @@ export default function PublicCampaignsPage() {
       } else {
         setCampaigns(data || [])
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({ title: "Unexpected Error", description: error.message || "An unexpected error occurred.", variant: "destructive" })
       setCampaigns([])
     } finally {

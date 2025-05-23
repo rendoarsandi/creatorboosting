@@ -62,7 +62,7 @@ export default function SignUpPage() {
           variant: "destructive",
         })
       }
-    } catch (error: any)셔
+    } catch (error: unknown) {
       toast({
         title: "Sign Up Error",
         description: error.message || "An unexpected error occurred.",

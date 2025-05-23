@@ -43,7 +43,7 @@ export default function CreatorCampaignsPage() {
       } else {
         setCampaigns(data || [])
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({ title: "Unexpected Error", description: error.message || "An unexpected error occurred.", variant: "destructive" })
       setCampaigns([])
     } finally {
@@ -63,7 +63,7 @@ export default function CreatorCampaignsPage() {
           toast({ title: "Unauthorized", description: "You must be logged in to view your campaigns.", variant: "destructive" })
           router.push("/auth/login")
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({ title: "Error fetching user", description: error.message, variant: "destructive" })
         router.push("/auth/login")
       } finally {

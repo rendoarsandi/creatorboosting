@@ -46,7 +46,7 @@ export default function CreateCampaignPage() {
           toast({ title: "Unauthorized", description: "You must be logged in to create a campaign.", variant: "destructive" })
           router.push("/auth/login")
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({ title: "Error fetching user", description: error.message, variant: "destructive" })
         router.push("/auth/login")
       } finally {
@@ -105,7 +105,7 @@ export default function CreateCampaignPage() {
         toast({ title: "Campaign Created!", description: "Your new campaign has been created as a draft." })
         router.push("/creator/campaigns") // Arahkan ke daftar kampanye
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({ title: "Unexpected Error", description: error.message || "An unexpected error occurred.", variant: "destructive" })
     } finally {
       setLoading(false)

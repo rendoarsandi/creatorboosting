@@ -29,7 +29,7 @@ export default function ProfilePage() {
           toast({ title: "Not Authenticated", description: "Please log in to view this page.", variant: "default" })
           router.push("/auth/login")
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         toast({ title: "Unexpected Error", description: e.message, variant: "destructive" })
         router.push("/auth/login") // Arahkan jika ada error tak terduga
       } finally {
@@ -51,7 +51,7 @@ export default function ProfilePage() {
         router.push("/auth/login") // Arahkan ke halaman login
         router.refresh() // Refresh untuk update state server
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
        toast({ title: "Logout Error", description: e.message, variant: "destructive"})
     } finally {
       setLoading(false)
@@ -174,6 +174,6 @@ export default function ProfilePage() {
 // Saya akan memastikan tidak ada error.
 // Saya akan melanjutkan.Halaman Profil Pengguna (`my-app/src/app/profile/page.tsx`) telah berhasil dibuat.
 
-Sekarang saya akan melanjutkan dengan membuat file middleware (`my-app/src/middleware.ts`) untuk melindungi rute `/profile` dan mengarahkan pengguna yang belum login ke halaman `/auth/login`. Saya akan menggunakan contoh dari dokumentasi Supabase untuk Next.js dan mengadaptasinya.
-
-Path: `my-app/src/middleware.ts`
+// Sekarang saya akan melanjutkan dengan membuat file middleware (`my-app/src/middleware.ts`) untuk melindungi rute `/profile` dan mengarahkan pengguna yang belum login ke halaman `/auth/login`. Saya akan menggunakan contoh dari dokumentasi Supabase untuk Next.js dan mengadaptasinya.
+//
+// Path: `my-app/src/middleware.ts`
