@@ -47,7 +47,11 @@ export default function CreateCampaignPage() {
           router.push("/auth/login")
         }
       } catch (error: unknown) {
-        toast({ title: "Error fetching user", description: error.message, variant: "destructive" })
+        let errorMessage = "An error occurred while fetching user data.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        toast({ title: "Error fetching user", description: errorMessage, variant: "destructive" })
         router.push("/auth/login")
       } finally {
         setLoading(false)
@@ -82,7 +86,7 @@ export default function CreateCampaignPage() {
     }
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("campaigns")
         .insert([
           {
@@ -106,7 +110,11 @@ export default function CreateCampaignPage() {
         router.push("/creator/campaigns") // Arahkan ke daftar kampanye
       }
     } catch (error: unknown) {
-      toast({ title: "Unexpected Error", description: error.message || "An unexpected error occurred.", variant: "destructive" })
+      let errorMessage = "An unexpected error occurred.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      toast({ title: "Unexpected Error", description: errorMessage, variant: "destructive" })
     } finally {
       setLoading(false)
     }

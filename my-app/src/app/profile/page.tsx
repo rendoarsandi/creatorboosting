@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast"
 import type { User } from "@supabase/supabase-js"
 
@@ -30,7 +32,11 @@ export default function ProfilePage() {
           router.push("/auth/login")
         }
       } catch (e: unknown) {
-        toast({ title: "Unexpected Error", description: e.message, variant: "destructive" })
+        let errorMessage = "An unexpected error occurred.";
+        if (e instanceof Error) {
+          errorMessage = e.message;
+        }
+        toast({ title: "Unexpected Error", description: errorMessage, variant: "destructive" })
         router.push("/auth/login") // Arahkan jika ada error tak terduga
       } finally {
         setLoading(false)
@@ -52,7 +58,11 @@ export default function ProfilePage() {
         router.refresh() // Refresh untuk update state server
       }
     } catch (e: unknown) {
-       toast({ title: "Logout Error", description: e.message, variant: "destructive"})
+      let errorMessage = "An unexpected error occurred during logout.";
+      if (e instanceof Error) {
+        errorMessage = e.message;
+      }
+       toast({ title: "Logout Error", description: errorMessage, variant: "destructive"})
     } finally {
       setLoading(false)
     }

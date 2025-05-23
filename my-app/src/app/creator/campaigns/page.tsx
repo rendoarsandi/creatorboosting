@@ -44,7 +44,11 @@ export default function CreatorCampaignsPage() {
         setCampaigns(data || [])
       }
     } catch (error: unknown) {
-      toast({ title: "Unexpected Error", description: error.message || "An unexpected error occurred.", variant: "destructive" })
+      let errorMessage = "An unexpected error occurred.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      toast({ title: "Unexpected Error", description: errorMessage, variant: "destructive" })
       setCampaigns([])
     } finally {
       setLoading(false)
@@ -64,7 +68,11 @@ export default function CreatorCampaignsPage() {
           router.push("/auth/login")
         }
       } catch (error: unknown) {
-        toast({ title: "Error fetching user", description: error.message, variant: "destructive" })
+        let errorMessage = "An error occurred while fetching user data.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        toast({ title: "Error fetching user", description: errorMessage, variant: "destructive" })
         router.push("/auth/login")
       } finally {
         setPageLoading(false)

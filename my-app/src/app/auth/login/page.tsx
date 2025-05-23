@@ -46,9 +46,13 @@ export default function LoginPage() {
         router.refresh() // Refresh untuk memastikan state server diperbarui (penting untuk middleware)
       }
     } catch (error: unknown) {
+      let errorMessage = "An unexpected error occurred.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       toast({
         title: "Sign In Error",
-        description: error.message || "An unexpected error occurred.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

@@ -43,7 +43,11 @@ export default function PublicCampaignsPage() {
         setCampaigns(data || [])
       }
     } catch (error: unknown) {
-      toast({ title: "Unexpected Error", description: error.message || "An unexpected error occurred.", variant: "destructive" })
+      let errorMessage = "An unexpected error occurred.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      toast({ title: "Unexpected Error", description: errorMessage, variant: "destructive" })
       setCampaigns([])
     } finally {
       setLoading(false)
