@@ -62,10 +62,10 @@ export default function SignUpPage() {
           variant: "destructive",
         })
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Sign Up Error",
-        description: error.message || "An unexpected error occurred.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred.",
         variant: "destructive",
       })
     } finally {

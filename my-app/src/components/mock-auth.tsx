@@ -4,7 +4,7 @@ import { useState, createContext, useContext, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { User, UserCheck, LogOut, Rocket, Target, Sparkles } from 'lucide-react'
+import { LogOut, Rocket, Target, Sparkles } from 'lucide-react'
 
 type UserRole = 'creator' | 'promotor' | null
 
