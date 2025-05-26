@@ -31,8 +31,8 @@ export default function ProfilePage() {
           toast({ title: "Not Authenticated", description: "Please log in to view this page.", variant: "default" })
           router.push("/auth/login")
         }
-      } catch (e: any) {
-        toast({ title: "Unexpected Error", description: e.message, variant: "destructive" })
+      } catch (e: unknown) {
+        toast({ title: "Unexpected Error", description: e instanceof Error ? e.message : "An unexpected error occurred.", variant: "destructive" })
         router.push("/auth/login")
       } finally {
         setLoading(false)
@@ -53,8 +53,8 @@ export default function ProfilePage() {
         router.push("/auth/login")
         router.refresh()
       }
-    } catch (e: any) {
-       toast({ title: "Logout Error", description: e.message, variant: "destructive"})
+    } catch (e: unknown) {
+       toast({ title: "Logout Error", description: e instanceof Error ? e.message : "An unexpected error occurred.", variant: "destructive"})
     } finally {
       setLoading(false)
     }

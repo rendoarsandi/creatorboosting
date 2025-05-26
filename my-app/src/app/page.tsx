@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Users, TrendingUp, Shield, Zap, Menu, Star, CheckCircle, BarChart3, DollarSign, Target, Globe, Rocket, Award, Clock, MessageSquare } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { AuthProvider, useAuth, UserProfile } from "@/components/mock-auth";
+import { useAuth, UserProfile } from "@/components/mock-auth";
 import { CreatorDashboard } from "@/components/creator-dashboard";
 import { PromotorDashboard } from "@/components/promotor-dashboard";
 import { useState } from "react";
@@ -458,7 +458,7 @@ function LandingPage() {
                 ))}
               </div>
               <p className="text-muted-foreground">
-                "Platform ini benar-benar mengubah cara saya mengelola kampanye. ROI meningkat 300% dalam 3 bulan!"
+                &ldquo;Platform ini benar-benar mengubah cara saya mengelola kampanye. ROI meningkat 300% dalam 3 bulan!&rdquo;
               </p>
             </Card>
 
@@ -478,7 +478,7 @@ function LandingPage() {
                 ))}
               </div>
               <p className="text-muted-foreground">
-                "Sebagai promotor, saya sangat terbantu dengan sistem tracking yang akurat dan pembayaran yang tepat waktu."
+                &ldquo;Sebagai promotor, saya sangat terbantu dengan sistem tracking yang akurat dan pembayaran yang tepat waktu.&rdquo;
               </p>
             </Card>
 
@@ -498,7 +498,7 @@ function LandingPage() {
                 ))}
               </div>
               <p className="text-muted-foreground">
-                "Interface yang user-friendly dan fitur analytics yang lengkap. Highly recommended untuk semua bisnis!"
+                &ldquo;Interface yang user-friendly dan fitur analytics yang lengkap. Highly recommended untuk semua bisnis!&rdquo;
               </p>
             </Card>
           </div>

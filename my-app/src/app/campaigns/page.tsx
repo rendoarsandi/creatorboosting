@@ -42,8 +42,8 @@ export default function PublicCampaignsPage() {
       } else {
         setCampaigns(data || [])
       }
-    } catch (error: any) {
-      toast({ title: "Unexpected Error", description: error.message || "An unexpected error occurred.", variant: "destructive" })
+    } catch (error: unknown) {
+      toast({ title: "Unexpected Error", description: error instanceof Error ? error.message : "An unexpected error occurred.", variant: "destructive" })
       setCampaigns([])
     } finally {
       setLoading(false)
