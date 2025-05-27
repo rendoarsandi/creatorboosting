@@ -17,8 +17,10 @@ import {
   Heart,
   MessageCircle
 } from 'lucide-react'
+import { useAuth } from '@/components/mock-auth';
 
 export function PromotorDashboard() {
+  const { user } = useAuth();
   const stats = [
     {
       title: "Total Investment",
@@ -47,6 +49,13 @@ export function PromotorDashboard() {
       change: "+12.8%",
       icon: TrendingUp,
       color: "text-orange-600"
+    },
+    {
+      title: "My Total Earnings",
+      value: "Rp 0", // Placeholder value
+      change: "View History",
+      icon: DollarSign, 
+      color: "text-teal-600"
     }
   ]
 
@@ -124,8 +133,12 @@ export function PromotorDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Promotor Dashboard</h1>
-          <p className="text-muted-foreground">Kelola kampanye marketing dan pantau ROI</p>
+          {user?.fullName ? (
+            <h1 className="text-3xl font-bold">Welcome, {user.fullName}!</h1>
+          ) : (
+            <h1 className="text-3xl font-bold">Promotor Dashboard</h1>
+          )}
+          <p className="text-muted-foreground">Kelola kampanye marketing dan pantau ROI.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">

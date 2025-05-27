@@ -1,37 +1,108 @@
 "use client"
 
-import { useState, createContext, useContext, ReactNode } from 'react'
+import { useState, createContext, useContext, ReactNode, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LogOut, Rocket, Target, Sparkles } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
+import { Session, User as SupabaseUser } from '@supabase/supabase-js'
 
 type UserRole = 'creator' | 'promotor' | null
 
+export interface UserProfileData {
+  id: string;
+  email?: string;
+  fullName?: string;
+  role: UserRole;
+  // Add any other fields from your 'profiles' table that you want in the context
+}
+
 interface AuthContextType {
-  user: { role: UserRole; name: string } | null
-  login: (role: UserRole, name: string) => void
-  logout: () => void
+  user: UserProfileData | null;
+  logout: () => Promise<void>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<{ role: UserRole; name: string } | null>(null)
+  const [user, setUser] = useState<UserProfileData | null>(null)
+  const [loading, setLoading] = useState(true);
   const router = useRouter()
 
-  const login = (role: UserRole, name: string) => {
-    setUser({ role, name })
-    // Redirect to home page after login
-    router.push('/')
-  }
+  useEffect(() => {
+    setLoading(true);
+    const getCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('full_name, user_type') // Adjust fields as needed
+          .eq('id', session.user.id)
+          .single();
 
-  const logout = () => {
-    setUser(null)
-  }
+        if (error || !profile) {
+          console.error('Error fetching profile or profile not found:', error);
+          await supabase.auth.signOut(); // Sign out if profile is missing
+          setUser(null);
+        } else {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            fullName: profile.full_name,
+            role: profile.user_type as UserRole,
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    };
+    getCurrentUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setLoading(true);
+      if (session) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('full_name, user_type')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error || !profile) {
+          console.error('Error fetching profile or profile not found during auth state change:', error);
+          await supabase.auth.signOut(); // Sign out if profile is missing
+          setUser(null);
+        } else {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            fullName: profile.full_name,
+            role: profile.user_type as UserRole,
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      authListener?.unsubscribe();
+    };
+  }, []);
+
+  const logout = async () => {
+    setLoading(true); 
+    await supabase.auth.signOut();
+    setUser(null); 
+    router.push('/auth/login'); 
+    setLoading(false); 
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )
@@ -45,52 +116,6 @@ export function useAuth() {
   return context
 }
 
-export function MockLoginCard() {
-  const { login } = useAuth()
-
-  return (
-    <Card className="w-full max-w-lg mx-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-2 border-white/20 dark:border-slate-700/50 shadow-2xl">
-      <CardHeader className="text-center pb-6">
-        <CardTitle className="flex items-center justify-center gap-3 text-2xl">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 w-10 h-10 rounded-full flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
-          Demo Login
-        </CardTitle>
-        <CardDescription className="text-lg">
-          Pilih role untuk mencoba dashboard secara langsung
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Button 
-          onClick={() => login('creator', 'Demo Creator')}
-          className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300"
-          variant="default"
-        >
-          <Rocket className="h-5 w-5 mr-3" />
-          Login sebagai Creator
-          <div className="ml-auto text-xs opacity-80">Kelola Kampanye</div>
-        </Button>
-        <Button 
-          onClick={() => login('promotor', 'Demo Promotor')}
-          className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-          variant="default"
-        >
-          <Target className="h-5 w-5 mr-3" />
-          Login sebagai Promotor
-          <div className="ml-auto text-xs opacity-80">Cari Kampanye</div>
-        </Button>
-        
-        <div className="pt-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            ✨ Tidak perlu registrasi • Akses langsung • Data demo
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 export function UserProfile() {
   const { user, logout } = useAuth()
 
@@ -99,7 +124,7 @@ export function UserProfile() {
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm font-medium">
-        {user.name} ({user.role})
+        {user.fullName || user.email} ({user.role}) {/* Fallback to email if fullName is not available */}
       </span>
       <Button
         onClick={logout}

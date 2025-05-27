@@ -14,8 +14,10 @@ import {
   Calendar,
   Target
 } from 'lucide-react'
+import { useAuth } from '@/components/mock-auth';
 
 export function CreatorDashboard() {
+  const { user } = useAuth();
   const stats = [
     {
       title: "Total Earnings",
@@ -85,8 +87,12 @@ export function CreatorDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Creator Dashboard</h1>
-          <p className="text-muted-foreground">Kelola kampanye dan pantau performa konten Anda</p>
+          {user?.fullName ? (
+            <h1 className="text-3xl font-bold">Welcome, {user.fullName}!</h1>
+          ) : (
+            <h1 className="text-3xl font-bold">Creator Dashboard</h1>
+          )}
+          <p className="text-muted-foreground">Kelola kampanye dan pantau performa konten Anda.</p>
         </div>
         <Button>
           <Plus className="h-4 w-4 mr-2" />

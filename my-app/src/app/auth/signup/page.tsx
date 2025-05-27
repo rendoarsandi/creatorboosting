@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -19,12 +19,26 @@ import { supabase } from "@/lib/supabaseClient"
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const searchParams = useSearchParams();
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    
+    const role = searchParams.get("role");
+
+    if (role !== 'creator' && role !== 'promotor') {
+      toast({
+        title: "Invalid Role",
+        description: "A valid role (creator or promotor) is required to sign up.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true)
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -48,6 +62,22 @@ export default function SignUpPage() {
          // Optionally, redirect to login or a specific info page
         router.push("/auth/login")
       } else if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { id: data.user.id, full_name: fullName, email: email, user_type: role }
+          ]);
+
+        if (profileError) {
+          toast({
+            title: "Error Creating Profile",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          // setLoading(false); // Ensure loading is stopped - this is handled in finally
+          return; 
+        }
+        
         toast({
           title: "Sign Up Successful!",
           description: "Please check your email to confirm your registration.",
@@ -79,12 +109,24 @@ export default function SignUpPage() {
         <CardHeader>
           <CardTitle>Create an Account</CardTitle>
           <CardDescription>
-            Enter your email and password to sign up.
+            Fill in the details below to create your account.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input
