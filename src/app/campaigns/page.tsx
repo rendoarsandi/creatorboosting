@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { supabase } from "@/lib/supabaseClient"
+// import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
@@ -19,40 +19,44 @@ interface Campaign {
   // requirements: string // Mungkin tidak ditampilkan di daftar publik
 }
 
+const mockPublicCampaigns: Campaign[] = [
+  {
+    id: "1",
+    title: "Summer Sale Extravaganza",
+    description: "Promote our biggest summer sale event! Get exclusive codes for your followers and earn big.",
+    target_metric: "clicks",
+    price_per_engagement: 0.5,
+  },
+  {
+    id: "4",
+    title: "New Mobile Game Launch",
+    description: "Be the first to showcase our new epic mobile game. We are looking for enthusiastic gamers.",
+    target_metric: "installs",
+    price_per_engagement: 2.0,
+  },
+  {
+    id: "5",
+    title: "Eco-Friendly Product Line",
+    description: "Help us spread the word about our new sustainable and eco-friendly products.",
+    target_metric: "views",
+    price_per_engagement: 0.1,
+  },
+]
+
 export default function PublicCampaignsPage() {
   const { toast } = useToast()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchPublicCampaigns = useCallback(async () => {
-    setLoading(true)
-    try {
-      // Mengambil kampanye yang statusnya 'active'.
-      // CATATAN: Saat ini, semua kampanye dibuat sebagai 'draft'. 
-      // Daftar ini mungkin kosong sampai ada mekanisme untuk mengubah status kampanye menjadi 'active'.
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("id, title, description, target_metric, price_per_engagement")
-        .eq("status", "active") 
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        toast({ title: "Error Fetching Campaigns", description: error.message, variant: "destructive" })
-        setCampaigns([])
-      } else {
-        setCampaigns(data || [])
-      }
-    } catch (error: unknown) {
-      toast({ title: "Unexpected Error", description: error instanceof Error ? error.message : "An unexpected error occurred.", variant: "destructive" })
-      setCampaigns([])
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
-
   useEffect(() => {
-    fetchPublicCampaigns()
-  }, [fetchPublicCampaigns])
+    // Simulate fetching public data
+    setLoading(true)
+    setTimeout(() => {
+      // TODO: Replace with actual data fetching from Cloudflare D1
+      setCampaigns(mockPublicCampaigns)
+      setLoading(false)
+    }, 1000)
+  }, [])
 
   return (
     <div className="container mx-auto py-10 px-4">

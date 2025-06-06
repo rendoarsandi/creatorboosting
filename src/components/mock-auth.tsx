@@ -2,6 +2,7 @@
 
 import { useState, createContext, useContext, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LogOut, Rocket, Target, Sparkles } from 'lucide-react'
@@ -46,7 +47,8 @@ export function useAuth() {
 }
 
 export function MockLoginCard() {
-  const { login } = useAuth()
+  // URL ini harus diganti dengan URL aplikasi Cloudflare Access Anda
+  const cloudflareAccessUrl = "https://<your-team-name>.cloudflareaccess.com/apps/<your-app-id>"
 
   return (
     <Card className="w-full max-w-lg mx-auto bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-2 border-white/20 dark:border-slate-700/50 shadow-2xl">
@@ -55,35 +57,29 @@ export function MockLoginCard() {
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 w-10 h-10 rounded-full flex items-center justify-center">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
-          Demo Login
+          Login / Sign Up
         </CardTitle>
         <CardDescription className="text-lg">
-          Pilih role untuk mencoba dashboard secara langsung
+          Lanjutkan dengan aman melalui Cloudflare.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button 
-          onClick={() => login('creator', 'Demo Creator')}
-          className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300"
-          variant="default"
-        >
-          <Rocket className="h-5 w-5 mr-3" />
-          Login sebagai Creator
-          <div className="ml-auto text-xs opacity-80">Kelola Kampanye</div>
+        <Button asChild className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300">
+          <Link href={cloudflareAccessUrl}>
+            <Rocket className="h-5 w-5 mr-3" />
+            Lanjutkan sebagai Creator
+          </Link>
         </Button>
-        <Button 
-          onClick={() => login('promotor', 'Demo Promotor')}
-          className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-          variant="default"
-        >
-          <Target className="h-5 w-5 mr-3" />
-          Login sebagai Promotor
-          <div className="ml-auto text-xs opacity-80">Cari Kampanye</div>
+        <Button asChild className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+          <Link href={cloudflareAccessUrl}>
+            <Target className="h-5 w-5 mr-3" />
+            Lanjutkan sebagai Promotor
+          </Link>
         </Button>
         
         <div className="pt-4 text-center">
           <p className="text-sm text-muted-foreground">
-            ✨ Tidak perlu registrasi • Akses langsung • Data demo
+            ✨ Anda akan diarahkan ke halaman login yang aman.
           </p>
         </div>
       </CardContent>

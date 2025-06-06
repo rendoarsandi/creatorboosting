@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { supabase } from "@/lib/supabaseClient"
+// import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table"
 import { useToast } from "@/components/ui/use-toast"
-import type { User } from "@supabase/supabase-js"
+import { useAuth } from "@/components/mock-auth"
+// import type { User } from "@supabase/supabase-js"
 
 interface Campaign {
   id: string
@@ -20,65 +21,61 @@ interface Campaign {
   created_at: string
 }
 
+const mockCampaigns: Campaign[] = [
+  {
+    id: "1",
+    title: "Demo Campaign: Summer Sale",
+    status: "active",
+    budget: 1000,
+    price_per_engagement: 0.5,
+    target_metric: "clicks",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    title: "Demo Campaign: New Product Launch",
+    status: "draft",
+    budget: 2500,
+    price_per_engagement: 1.2,
+    target_metric: "signups",
+    created_at: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
+  },
+  {
+    id: "3",
+    title: "Old Campaign: Winter Special",
+    status: "completed",
+    budget: 500,
+    price_per_engagement: 0.25,
+    target_metric: "views",
+    created_at: new Date(Date.now() - 86400000 * 30).toISOString(), // 30 days ago
+  },
+]
+
 export default function CreatorCampaignsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [user, setUser] = useState<User | null>(null)
+  const { user } = useAuth()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
-  const [pageLoading, setPageLoading] = useState(true) // Untuk loading awal user
-
-  const fetchCampaigns = useCallback(async (currentUserId: string) => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("id, title, status, budget, price_per_engagement, target_metric, created_at")
-        .eq("creator_id", currentUserId)
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        toast({ title: "Error Fetching Campaigns", description: error.message, variant: "destructive" })
-        setCampaigns([])
-      } else {
-        setCampaigns(data || [])
-      }
-    } catch (error: unknown) {
-      toast({ title: "Unexpected Error", description: error instanceof Error ? error.message : "An unexpected error occurred.", variant: "destructive" })
-      setCampaigns([])
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
 
   useEffect(() => {
-    const fetchUserAndCampaigns = async () => {
-      setPageLoading(true)
-      try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
-        if (currentUser) {
-          setUser(currentUser)
-          await fetchCampaigns(currentUser.id)
-        } else {
-          toast({ title: "Unauthorized", description: "You must be logged in to view your campaigns.", variant: "destructive" })
-          router.push("/auth/login")
-        }
-      } catch (error: unknown) {
-        toast({ title: "Error fetching user", description: error instanceof Error ? error.message : "An unexpected error occurred.", variant: "destructive" })
-        router.push("/auth/login")
-      } finally {
-        setPageLoading(false)
-      }
+    if (!user || user.role !== 'creator') {
+      toast({ title: "Unauthorized", description: "You must be logged in as a Creator to view this page.", variant: "destructive" })
+      router.push("/auth/login")
+      return
     }
-    fetchUserAndCampaigns()
-  }, [router, toast, fetchCampaigns])
-  
-  if (pageLoading) {
-    return <div className="flex items-center justify-center min-h-screen"><p>Loading page...</p></div>
-  }
 
-  if (!user && !pageLoading) {
-     return <div className="flex items-center justify-center min-h-screen"><p>Redirecting to login...</p></div>
+    // Simulate fetching data
+    setLoading(true)
+    setTimeout(() => {
+      // TODO: Replace with actual data fetching from Cloudflare D1
+      setCampaigns(mockCampaigns)
+      setLoading(false)
+    }, 1000)
+  }, [user, router, toast])
+  
+  if (!user) {
+    return <div className="flex items-center justify-center min-h-screen"><p>Loading or redirecting...</p></div>
   }
 
   return (

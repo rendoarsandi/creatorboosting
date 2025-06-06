@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabaseClient"
+// import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea" // Pastikan ini sudah dibuat
 import { useToast } from "@/components/ui/use-toast"
-import type { User } from "@supabase/supabase-js"
+import { useAuth } from "@/components/mock-auth"
+// import type { User } from "@supabase/supabase-js"
 
 interface CampaignFormData {
   title: string
@@ -24,8 +25,8 @@ interface CampaignFormData {
 export default function CreateCampaignPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<CampaignFormData>({
     title: "",
     description: "",
@@ -37,24 +38,11 @@ export default function CreateCampaignPage() {
   })
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
-        if (currentUser) {
-          setUser(currentUser)
-        } else {
-          toast({ title: "Unauthorized", description: "You must be logged in to create a campaign.", variant: "destructive" })
-          router.push("/auth/login")
-        }
-      } catch (error: unknown) {
-        toast({ title: "Error fetching user", description: error instanceof Error ? error.message : "An unexpected error occurred.", variant: "destructive" })
-        router.push("/auth/login")
-      } finally {
-        setLoading(false)
-      }
+    if (!user || user.role !== 'creator') {
+      toast({ title: "Unauthorized", description: "You must be logged in as a Creator.", variant: "destructive" })
+      router.push("/auth/login")
     }
-    fetchUser()
-  }, [router, toast])
+  }, [user, router, toast])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
@@ -66,57 +54,18 @@ export default function CreateCampaignPage() {
 
   const handleCreateCampaign = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!user) {
-      toast({ title: "Error", description: "User not found. Please log in again.", variant: "destructive" })
-      return
-    }
     setLoading(true)
-
-    const budgetAsNumber = parseFloat(formData.budget as string)
-    const pricePerEngagementAsNumber = parseFloat(formData.price_per_engagement as string)
-
-    if (isNaN(budgetAsNumber) || isNaN(pricePerEngagementAsNumber)) {
-        toast({ title: "Invalid Input", description: "Budget and Price per Engagement must be valid numbers.", variant: "destructive" })
-        setLoading(false)
-        return
-    }
-
-    try {
-      const { error } = await supabase
-        .from("campaigns")
-        .insert([
-          {
-            creator_id: user.id,
-            title: formData.title,
-            description: formData.description,
-            budget: budgetAsNumber,
-            price_per_engagement: pricePerEngagementAsNumber,
-            target_metric: formData.target_metric,
-            campaign_materials_url: formData.campaign_materials_url,
-            requirements: formData.requirements,
-            status: "draft", // Default status
-          },
-        ])
-        .select() // Untuk mendapatkan data yang baru saja dimasukkan (opsional)
-
-      if (error) {
-        toast({ title: "Error Creating Campaign", description: error.message, variant: "destructive" })
-      } else {
-        toast({ title: "Campaign Created!", description: "Your new campaign has been created as a draft." })
-        router.push("/creator/campaigns") // Arahkan ke daftar kampanye
-      }
-    } catch (error: unknown) {
-      toast({ title: "Unexpected Error", description: error instanceof Error ? error.message : "An unexpected error occurred.", variant: "destructive" })
-    } finally {
-      setLoading(false)
-    }
+    // TODO: Implement campaign creation with Cloudflare D1 and R2
+    toast({
+      title: "Feature Not Implemented",
+      description: "Campaign creation is currently disabled.",
+    })
+    console.log("Form Data:", formData)
+    setLoading(false)
   }
 
-  if (loading && !user) { // Tampilkan loading hanya jika user belum ter-fetch
-    return <div className="flex items-center justify-center min-h-screen"><p>Loading...</p></div>
-  }
-  if (!user && !loading) { // Jika sudah selesai loading dan user tidak ada (sudah diarahkan, tapi sebagai fallback)
-     return <div className="flex items-center justify-center min-h-screen"><p>Redirecting to login...</p></div>
+  if (!user) {
+    return <div className="flex items-center justify-center min-h-screen"><p>Loading or redirecting...</p></div>
   }
 
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Turnstile } from "@marsidev/react-turnstile"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -14,63 +15,44 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabaseClient"
+// import { supabase } from "@/lib/supabaseClient"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [turnstileToken, setTurnstileToken] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setLoading(true)
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-      if (error) {
-        toast({
-          title: "Error Signing Up",
-          description: error.message,
-          variant: "destructive",
-        })
-      } else if (data.user && data.user.identities && data.user.identities.length === 0) {
-        // This can happen if email confirmation is required but the user already exists without confirming.
-        // Supabase might return a user object but with an empty identities array.
-        toast({
-          title: "Confirmation Required",
-          description: "A user with this email already exists but is not confirmed. Please check your email to confirm.",
-          variant: "default",
-        })
-         // Optionally, redirect to login or a specific info page
-        router.push("/auth/login")
-      } else if (data.user) {
-        toast({
-          title: "Sign Up Successful!",
-          description: "Please check your email to confirm your registration.",
-        })
-        // Redirect to login page or a page that tells them to check their email
-        router.push("/auth/login")
-      } else {
-        // Fallback for unexpected scenarios
-         toast({
-          title: "Sign Up Issue",
-          description: "An unexpected issue occurred during sign up. Please try again.",
-          variant: "destructive",
-        })
-      }
-    } catch (error: unknown) {
+    if (!turnstileToken) {
       toast({
-        title: "Sign Up Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred.",
+        title: "Verification Failed",
+        description: "Please complete the verification challenge.",
         variant: "destructive",
       })
-    } finally {
-      setLoading(false)
+      return
     }
+    setLoading(true)
+    
+    // TODO: 1. Verify Turnstile token on backend worker
+    // TODO: 2. Potentially create a user record in D1 if needed before redirect
+    
+    toast({
+      title: "Redirecting to Login...",
+      description: "You will be redirected to the secure login page.",
+    })
+
+    // In a real app, this would be the Cloudflare Access URL for your application
+    const cloudflareAccessUrl = "https://<your-team-name>.cloudflareaccess.com/apps/<your-app-id>"
+    
+    // For now, we'll just simulate the redirect to the mock login page
+    // window.location.href = cloudflareAccessUrl;
+    router.push('/auth/login');
+
+    // setLoading(false) // This line might not be reached if redirection is fast
   }
 
   return (
@@ -109,8 +91,17 @@ export default function SignUpPage() {
                   disabled={loading}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing Up..." : "Sign Up"}
+              <div className="flex justify-center">
+                <Turnstile
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+                  onSuccess={setTurnstileToken}
+                  options={{
+                    theme: "light", // or 'dark'
+                  }}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading || !turnstileToken}>
+                {loading ? "Processing..." : "Sign Up / Continue"}
               </Button>
             </div>
           </form>
