@@ -13,7 +13,7 @@ type CampaignDetail = {
   description: string | null
   terms: string | null
   rate_per_10k_views: number
-  profiles: { full_name: string | null }[] | null
+  creator: { full_name: string | null } | null
   campaign_assets: { asset_url: string }[]
 }
 
@@ -39,16 +39,18 @@ export default function CampaignDetailPage() {
           description,
           terms,
           rate_per_10k_views,
-          profiles ( full_name ),
+          creator:profiles ( full_name ),
           campaign_assets ( asset_url )
         `)
         .eq('id', campaignId)
         .single()
 
       if (error) throw error
-      if (data) setCampaign(data as CampaignDetail)
-    } catch (error: any) {
-      console.error('Error fetching campaign details:', error.message)
+      if (data) setCampaign(data as unknown as CampaignDetail)
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error fetching campaign details:', error.message)
+      }
       setError('Gagal memuat detail kampanye.')
     } finally {
       setLoading(false)
@@ -92,8 +94,12 @@ export default function CampaignDetailPage() {
 
       alert('URL berhasil disubmit! Anda akan diarahkan ke dasbor Anda.')
       router.push('/dashboard/promoter')
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unknown error occurred.')
+      }
     } finally {
       setSubmitLoading(false)
     }
@@ -107,7 +113,7 @@ export default function CampaignDetailPage() {
     <div className="container mx-auto p-4 md:p-8 max-w-3xl">
       <div className="bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-3xl font-bold mb-2">{campaign.title}</h1>
-        <p className="text-md text-gray-600 mb-6">oleh {campaign.profiles?.[0]?.full_name || 'Kreator Anonim'}</p>
+        <p className="text-md text-gray-600 mb-6">oleh {campaign.creator?.full_name || 'Kreator Anonim'}</p>
 
         <div className="prose max-w-none mb-6">
           <h2 className="text-xl font-semibold">Deskripsi</h2>

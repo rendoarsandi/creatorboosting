@@ -34,7 +34,7 @@ export default function LoginPage() {
       router.push('/dashboard/creator')
       router.refresh()
 
-    } catch (error: any) {
+    } catch {
       setError('Email atau password salah.')
     } finally {
       setLoading(false)
@@ -52,8 +52,12 @@ export default function LoginPage() {
         },
       })
       if (error) throw error
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unknown error occurred during Google login.')
+      }
     } finally {
       setLoading(false)
     }

@@ -11,7 +11,7 @@ type Campaign = {
   description: string | null
   rate_per_10k_views: number
   creator_id: string
-  profiles: { full_name: string | null } | null
+  creator: { full_name: string | null } | null
 }
 
 export default function MarketplacePage() {
@@ -30,15 +30,17 @@ export default function MarketplacePage() {
             description,
             rate_per_10k_views,
             creator_id,
-            profiles ( full_name )
+            creator:profiles ( full_name )
           `)
           .eq('status', 'active')
           .order('created_at', { ascending: false })
 
         if (error) throw error
-        if (data) setCampaigns(data as Campaign[])
-      } catch (error: any) {
-        console.error('Error fetching marketplace campaigns:', error.message)
+        if (data) setCampaigns(data as unknown as Campaign[])
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error('Error fetching marketplace campaigns:', error.message)
+        }
       } finally {
         setLoading(false)
       }
@@ -59,7 +61,7 @@ export default function MarketplacePage() {
               <div className="flex-grow">
                 <h2 className="text-xl font-bold mb-2">{campaign.title}</h2>
                 <p className="text-sm text-gray-500 mb-2">
-                  oleh {campaign.profiles?.full_name || 'Kreator Anonim'}
+                  oleh {campaign.creator?.full_name || 'Kreator Anonim'}
                 </p>
                 <p className="text-gray-700 mb-4">
                   {campaign.description?.substring(0, 100) || 'Tidak ada deskripsi.'}...

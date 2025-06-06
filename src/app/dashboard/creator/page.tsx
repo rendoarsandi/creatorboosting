@@ -57,8 +57,12 @@ export default function CreatorDashboard() {
 
       if (error) throw error
       if (data) setCampaigns(data)
-    } catch (error: any) {
-      console.error('Error fetching campaigns:', error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error fetching campaigns:', error.message)
+      } else {
+        console.error('An unknown error occurred while fetching campaigns')
+      }
     } finally {
       setLoading(false)
     }

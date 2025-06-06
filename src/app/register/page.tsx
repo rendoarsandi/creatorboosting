@@ -24,7 +24,7 @@ export default function RegisterPage() {
     setError(null)
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -42,8 +42,12 @@ export default function RegisterPage() {
       alert('Registrasi berhasil! Silakan cek email Anda untuk verifikasi.')
       router.push('/login')
 
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unknown error occurred during registration.')
+      }
     } finally {
       setLoading(false)
     }
@@ -63,8 +67,12 @@ export default function RegisterPage() {
         },
       })
       if (error) throw error
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An unknown error occurred during Google sign-in.')
+      }
     } finally {
       setLoading(false)
     }

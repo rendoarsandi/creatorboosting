@@ -2,20 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import type { User } from '@supabase/supabase-js'
 
 type Submission = {
   id: string
   submitted_url: string
   status: string
   tracked_views: number | null
-  campaigns: {
+  campaign: {
     title: string | null
   } | null
 }
 
 export default function PromoterDashboard() {
-  const [user, setUser] = useState<User | null>(null)
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -23,7 +21,6 @@ export default function PromoterDashboard() {
     const fetchUserAndSubmissions = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        setUser(user)
         fetchSubmissions(user.id)
       } else {
         window.location.href = '/login'
@@ -42,15 +39,19 @@ export default function PromoterDashboard() {
           submitted_url,
           status,
           tracked_views,
-          campaigns ( title )
+          campaign:campaigns ( title )
         `)
         .eq('promoter_id', promoterId)
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      if (data) setSubmissions(data as Submission[])
-    } catch (error: any) {
-      console.error('Error fetching submissions:', error.message)
+      if (data) setSubmissions(data as unknown as Submission[])
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error fetching submissions:', error.message)
+      } else {
+        console.error('An unknown error occurred while fetching submissions')
+      }
     } finally {
       setLoading(false)
     }
@@ -68,7 +69,7 @@ export default function PromoterDashboard() {
           <div className="space-y-4">
             {submissions.map((submission) => (
               <div key={submission.id} className="p-4 border rounded-md">
-                <p className="font-semibold text-lg">{submission.campaigns?.title || 'Kampanye Tanpa Judul'}</p>
+                <p className="font-semibold text-lg">{submission.campaign?.title || 'Kampanye Tanpa Judul'}</p>
                 <a href={submission.submitted_url} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline truncate">
                   {submission.submitted_url}
                 </a>

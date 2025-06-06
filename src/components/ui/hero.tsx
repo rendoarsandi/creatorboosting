@@ -139,7 +139,7 @@ const Hero = React.forwardRef<HTMLElement, HeroProps>(
             )}
             {actions && actions.length > 0 && (
               <div className={cn("flex gap-4", actionsClassName)}>
-                {actions.map((action: any, index: number) => (
+                {actions.map((action, index: number) => (
                   <Button
                     key={index}
                     variant={action.variant || "default"}

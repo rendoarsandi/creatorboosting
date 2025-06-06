@@ -37,8 +37,12 @@ export default function ProfilePage() {
         setProfile(data)
         setFullName(data.full_name || '')
       }
-    } catch (error: any) {
-      alert(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message)
+      } else {
+        alert('An unknown error occurred while fetching profile.')
+      }
     } finally {
       setLoading(false)
     }
@@ -75,8 +79,12 @@ export default function ProfilePage() {
       alert('Profil berhasil diperbarui!')
       // Refresh profile data
       await getProfile(user)
-    } catch (error: any) {
-      alert(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message)
+      } else {
+        alert('An unknown error occurred while updating profile.')
+      }
     } finally {
       setLoading(false)
     }
