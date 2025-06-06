@@ -31,8 +31,7 @@ export default function LoginPage() {
         throw error
       }
 
-      router.push('/dashboard/creator')
-      router.refresh()
+      window.location.href = '/dashboard/creator'
 
     } catch {
       setError('Email atau password salah.')
