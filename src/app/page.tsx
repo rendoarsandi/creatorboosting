@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowRight, Users, TrendingUp, Shield, Zap, Menu, Star, CheckCircle, BarChart3, DollarSign, Target, Globe, Rocket, Award, Clock, MessageSquare } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth, UserProfile } from "@/components/mock-auth";
-import { CreatorDashboard } from "@/components/creator-dashboard";
-import { PromotorDashboard } from "@/components/promotor-dashboard";
 import { useState } from "react";
+import dynamic from "next/dynamic";
+
+const DynamicCreatorDashboard = dynamic(() => import('@/components/creator-dashboard').then(mod => mod.CreatorDashboard), { ssr: false });
+const DynamicPromotorDashboard = dynamic(() => import('@/components/promotor-dashboard').then(mod => mod.PromotorDashboard), { ssr: false });
 
 function Navigation() {
   const { user } = useAuth();
@@ -668,7 +670,7 @@ function MainApp() {
       <div className="min-h-screen bg-background">
         <Navigation />
         <main className="container mx-auto px-4 py-8">
-          {user.role === 'creator' ? <CreatorDashboard /> : <PromotorDashboard />}
+          {user.role === 'creator' ? <DynamicCreatorDashboard /> : <DynamicPromotorDashboard />}
         </main>
       </div>
     );

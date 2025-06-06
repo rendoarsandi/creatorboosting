@@ -46,7 +46,6 @@ export default function SignUpPage() {
     })
 
     // In a real app, this would be the Cloudflare Access URL for your application
-    const cloudflareAccessUrl = "https://<your-team-name>.cloudflareaccess.com/apps/<your-app-id>"
     
     // For now, we'll just simulate the redirect to the mock login page
     // window.location.href = cloudflareAccessUrl;

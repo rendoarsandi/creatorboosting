@@ -1,0 +1,27 @@
+# Nama proyek Anda di Cloudflare
+name = "creatorboosting-a"
+# Tanggal kompatibilitas untuk memastikan fungsionalitas yang stabil
+compatibility_date = "2024-06-06"
+
+# Konfigurasi untuk Cloudflare Pages
+[pages_build]
+# Perintah untuk membangun proyek Next.js Anda
+build_command = "npm run build"
+# Direktori output hasil build (untuk Next.js, ini biasanya .next)
+# Cloudflare Pages seringkali mendeteksi ini secara otomatis, tetapi lebih baik untuk menentukannya.
+build_output_dir = ".next"
+
+# --- Konfigurasi untuk diisi nanti ---
+# Binding ini memungkinkan kode Anda (Workers/Functions) untuk mengakses layanan Cloudflare lainnya.
+# Anda perlu membuat layanan ini di dasbor Cloudflare dan mengisi ID/nama di sini.
+
+# Binding untuk Database D1
+# [[d1_databases]]
+# binding = "DB" # Nama variabel yang akan digunakan di dalam kode Anda
+# database_name = "creatorboosting-db" # Nama database Anda di Cloudflare
+# database_id = "<GANTI_DENGAN_ID_DATABASE_D1_ANDA>" # ID ini didapat setelah membuat database
+
+# Binding untuk Penyimpanan R2
+# [[r2_buckets]]
+# binding = "ASSETS" # Nama variabel yang akan digunakan di dalam kode Anda
+# bucket_name = "creatorboosting-assets" # Nama bucket Anda di Cloudflare
