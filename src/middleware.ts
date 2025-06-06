@@ -58,11 +58,14 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Lindungi rute ini
-  const protectedRoutes = ['/profile', '/creator']
+  // Jika pengguna tidak login dan mencoba mengakses rute yang dilindungi
+  if (!user && (request.nextUrl.pathname.startsWith('/profile') || request.nextUrl.pathname.startsWith('/dashboard'))) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
 
-  if (!user && protectedRoutes.some(path => request.nextUrl.pathname.startsWith(path))) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+  // Jika pengguna sudah login dan mencoba mengakses halaman login/register
+  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register')) {
+    return NextResponse.redirect(new URL('/profile', request.url))
   }
 
   return response
@@ -71,12 +74,12 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * Cocokkan semua path permintaan kecuali untuk yang dimulai dengan:
+     * - _next/static (file statis)
+     * - _next/image (optimasi gambar)
+     * - favicon.ico (file favicon)
+     * Ini untuk menghindari menjalankan middleware pada aset yang tidak perlu.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }
