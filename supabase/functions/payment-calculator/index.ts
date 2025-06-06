@@ -5,13 +5,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 interface Submission {
   id: string;
   tracked_views: number;
+  views_paid_for: number;
   campaign_id: string;
   promoter_id: string;
-  // Kita perlu mengambil data kampanye juga
   campaigns: {
     rate_per_10k_views: number;
     creator_id: string;
-    total_budget: number; // Untuk memeriksa sisa budget
   } | null;
 }
 
@@ -24,19 +23,19 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // 2. Ambil semua submission yang statusnya 'tracking'
-    //    dan memiliki selisih views yang perlu dibayar.
-    //    Logika ini perlu disempurnakan. Untuk sekarang, kita ambil semua.
+    // 2. Ambil semua submission yang statusnya 'tracking' dan memiliki selisih views
     const { data: submissions, error: submissionError } = await supabaseAdmin
       .from('submissions')
       .select(`
         id,
         tracked_views,
+        views_paid_for,
         campaign_id,
         promoter_id,
-        campaigns ( rate_per_10k_views, creator_id, total_budget )
+        campaigns ( rate_per_10k_views, creator_id )
       `)
-      .eq('status', 'tracking');
+      .eq('status', 'tracking')
+      .gt('tracked_views', 'views_paid_for'); // Hanya ambil jika ada views baru
 
     if (submissionError) throw submissionError;
     if (!submissions || submissions.length === 0) {
@@ -48,21 +47,21 @@ serve(async (req) => {
 
     // 3. Proses setiap submission
     for (const submission of submissions as Submission[]) {
-      // TODO: Logika yang lebih canggih diperlukan di sini.
-      // Kita perlu menyimpan 'views_paid_for' untuk menghindari pembayaran ganda.
-      // Untuk sekarang, kita asumsikan kita membayar untuk semua 'tracked_views'.
+      if (!submission.campaigns) {
+        console.log(`Skipping submission ${submission.id} due to missing campaign data.`);
+        continue;
+      }
 
-      if (!submission.campaigns) continue;
+      const viewsToPay = submission.tracked_views - submission.views_paid_for;
+      if (viewsToPay <= 0) continue;
 
-      const viewsToPay = submission.tracked_views; // Placeholder logic
       const rate = submission.campaigns.rate_per_10k_views;
       const paymentAmount = (viewsToPay / 10000) * rate;
 
-      if (paymentAmount <= 0) continue;
+      if (paymentAmount <= 0.01) continue; // Jangan proses pembayaran yang sangat kecil
 
-      // TODO: Cek apakah budget kampanye mencukupi
-
-      // 4. Panggil fungsi 'create_transfer' di database
+      // 4. Panggil fungsi 'create_transfer' di database.
+      // Fungsi ini sudah memiliki pengecekan saldo di dalamnya.
       const { error: rpcError } = await supabaseAdmin.rpc('create_transfer', {
         from_id: submission.campaigns.creator_id,
         to_id: submission.promoter_id,
@@ -71,10 +70,23 @@ serve(async (req) => {
       });
 
       if (rpcError) {
-        console.error(`Error processing payment for submission ${submission.id}:`, rpcError);
+        console.error(`Payment failed for submission ${submission.id}:`, rpcError.message);
+        // Jika error karena saldo tidak cukup, kita bisa menandai kampanye
+        if (rpcError.message.includes('Saldo tidak mencukupi')) {
+            // Logika untuk menonaktifkan kampanye bisa ditambahkan di sini
+        }
       } else {
-        console.log(`Successfully processed payment of ${paymentAmount} for submission ${submission.id}.`);
-        // TODO: Update 'views_paid_for' di tabel submissions
+        // 5. Jika transfer berhasil, update 'views_paid_for'
+        const { error: updateError } = await supabaseAdmin
+          .from('submissions')
+          .update({ views_paid_for: submission.tracked_views })
+          .eq('id', submission.id);
+
+        if (updateError) {
+          console.error(`CRITICAL: Payment was made for submission ${submission.id} but failed to update views_paid_for:`, updateError);
+        } else {
+          console.log(`Successfully processed payment of ${paymentAmount} for ${viewsToPay} new views on submission ${submission.id}.`);
+        }
       }
     }
 

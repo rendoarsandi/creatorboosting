@@ -5,17 +5,20 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
-type Campaign = {
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
+
+type CampaignWithCreator = {
   id: string
   title: string
   description: string | null
   rate_per_10k_views: number
-  creator_id: string
-  creator: { full_name: string | null } | null
+  profiles: {
+    full_name: string | null
+  } | null | { full_name: string | null }[]
 }
 
 export default function MarketplacePage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [campaigns, setCampaigns] = useState<CampaignWithCreator[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -30,14 +33,18 @@ export default function MarketplacePage() {
             title,
             description,
             rate_per_10k_views,
-            creator_id,
-            creator:profiles ( full_name )
+            profiles ( full_name )
           `)
           .eq('status', 'active')
           .order('created_at', { ascending: false })
 
-        if (error) throw error
-        if (data) setCampaigns(data as unknown as Campaign[])
+        if (error) {
+          console.error('Supabase error:', error)
+          throw error
+        }
+        if (data) {
+          setCampaigns(data)
+        }
       } catch (error) {
         if (error instanceof Error) {
           console.error('Error fetching marketplace campaigns:', error.message)
@@ -58,26 +65,32 @@ export default function MarketplacePage() {
       ) : campaigns.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {campaigns.map((campaign) => (
-            <div key={campaign.id} className="bg-white p-6 rounded-lg shadow-md flex flex-col">
-              <div className="flex-grow">
-                <h2 className="text-xl font-bold mb-2">{campaign.title}</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  oleh {campaign.creator?.full_name || 'Kreator Anonim'}
+            <Card key={campaign.id} className="flex flex-col">
+              <CardHeader>
+                <CardTitle>{campaign.title}</CardTitle>
+                <p className="text-sm text-muted-foreground pt-1">
+                  oleh {
+                    (Array.isArray(campaign.profiles)
+                      ? campaign.profiles[0]?.full_name
+                      : campaign.profiles?.full_name) || 'Kreator Anonim'
+                  }
                 </p>
-                <p className="text-gray-700 mb-4">
-                  {campaign.description?.substring(0, 100) || 'Tidak ada deskripsi.'}...
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <p className="text-muted-foreground">
+                  {campaign.description ? `${campaign.description.substring(0, 120)}...` : 'Tidak ada deskripsi.'}
                 </p>
-              </div>
-              <div className="mt-4">
-                <p className="text-lg font-semibold text-green-600">
-                  Rp {Number(campaign.rate_per_10k_views).toLocaleString('id-ID')}
-                  <span className="text-sm font-normal text-gray-500"> / 10k views</span>
-                </p>
-                <Link href={`/marketplace/${campaign.id}`} className="mt-4">
-                  <Button className="w-full">Lihat Detail</Button>
+              </CardContent>
+              <CardFooter className="flex flex-col items-start gap-4">
+                 <div className="text-lg font-bold text-primary">
+                   Rp {Number(campaign.rate_per_10k_views).toLocaleString('id-ID')}
+                   <span className="text-sm font-normal text-muted-foreground"> / 10k views</span>
+                 </div>
+                <Link href={`/marketplace/${campaign.id}`} className="w-full">
+                  <Button className="w-full">Lihat Detail & Ikut Kampanye</Button>
                 </Link>
-              </div>
-            </div>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       ) : (

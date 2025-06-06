@@ -8,6 +8,7 @@ import type { User } from '@supabase/supabase-js'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { CreatorAnalytics } from '@/components/ui/creator-analytics'
 
 type Campaign = {
   id: string
@@ -29,9 +30,25 @@ function getInitials(name: string) {
 export default function CreatorDashboard() {
   const [user, setUser] = useState<User | null>(null)
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [balance, setBalance] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('Pengguna')
   const supabase = createClient()
+
+  const fetchWalletBalance = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('id', userId)
+        .single()
+
+      if (error) throw error
+      if (data) setBalance(data.balance)
+    } catch (error) {
+      console.error('Error fetching wallet balance:', error)
+    }
+  }, [supabase])
 
   const fetchCampaigns = useCallback(async (creatorId: string) => {
     try {
@@ -56,18 +73,19 @@ export default function CreatorDashboard() {
   }, [supabase])
 
   useEffect(() => {
-    const fetchUserAndCampaigns = async () => {
+    const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUser(user)
         setUserName(user.user_metadata.full_name || user.email || 'Pengguna')
         fetchCampaigns(user.id)
+        fetchWalletBalance(user.id)
       } else {
         window.location.href = '/login'
       }
     }
-    fetchUserAndCampaigns()
-  }, [supabase.auth, fetchCampaigns])
+    fetchUserData()
+  }, [supabase.auth, fetchCampaigns, fetchWalletBalance])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -119,12 +137,32 @@ export default function CreatorDashboard() {
           <Button onClick={handleLogout} variant="outline">Keluar</Button>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Kampanye Saya</h1>
-            <Link href="/dashboard/creator/new">
-              <Button>Buat Kampanye Baru</Button>
-            </Link>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <h1 className="text-2xl font-semibold">Kampanye Saya</h1>
+              <p className="text-muted-foreground">Kelola dan pantau semua kampanye Anda.</p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+                <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Saldo Saat Ini</p>
+                    <p className="text-2xl font-bold">
+                        {balance !== null ? `Rp ${Number(balance).toLocaleString('id-ID')}` : 'Memuat...'}
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <Link href="/dashboard/creator/top-up">
+                        <Button>Top-Up Saldo</Button>
+                    </Link>
+                    <Link href="/dashboard/creator/new">
+                        <Button variant="outline">Buat Kampanye Baru</Button>
+                    </Link>
+                </div>
+            </div>
           </div>
+          <div className="border-t pt-4 mt-4">
+            <CreatorAnalytics />
+          </div>
+          <h2 className="text-xl font-semibold mt-6">Daftar Kampanye</h2>
           {loading ? (
             <p>Memuat kampanye...</p>
           ) : campaigns.length > 0 ? (

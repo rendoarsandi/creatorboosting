@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,49 +12,36 @@ export default function NewCampaignPage() {
   const [totalBudget, setTotalBudget] = useState('')
   const [rate, setRate] = useState('')
   const [terms, setTerms] = useState('')
-  const [assetUrl, setAssetUrl] = useState('')
+  const [assetFile, setAssetFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
+    const formData = new FormData()
+    formData.append('title', title)
+    formData.append('description', description)
+    formData.append('total_budget', totalBudget)
+    formData.append('rate_per_10k_views', rate)
+    formData.append('terms', terms)
+    if (assetFile) {
+      formData.append('assetFile', assetFile)
+    }
+
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Anda harus login untuk membuat kampanye.')
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        body: formData,
+      })
 
-      // 1. Insert into campaigns table
-      const { data: campaignData, error: campaignError } = await supabase
-        .from('campaigns')
-        .insert({
-          creator_id: user.id,
-          title,
-          description,
-          total_budget: parseFloat(totalBudget),
-          rate_per_10k_views: parseFloat(rate),
-          terms,
-          status: 'draft', // Campaigns start as draft
-        })
-        .select()
-        .single()
+      const result = await response.json()
 
-      if (campaignError) throw campaignError
-      if (!campaignData) throw new Error('Gagal membuat kampanye.')
-
-      // 2. Insert into campaign_assets table
-      if (assetUrl) {
-        const { error: assetError } = await supabase
-          .from('campaign_assets')
-          .insert({
-            campaign_id: campaignData.id,
-            asset_url: assetUrl,
-            asset_type: 'youtube_video', // Placeholder type
-          })
-        if (assetError) throw assetError
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal membuat kampanye.')
       }
 
       alert('Kampanye berhasil dibuat!')
@@ -66,7 +52,7 @@ export default function NewCampaignPage() {
       if (error instanceof Error) {
         setError(error.message)
       } else {
-        setError('An unknown error occurred')
+        setError('Terjadi kesalahan tidak diketahui.')
       }
     } finally {
       setLoading(false)
@@ -97,8 +83,9 @@ export default function NewCampaignPage() {
             </div>
           </div>
           <div>
-            <label htmlFor="assetUrl" className="block text-sm font-medium text-gray-700">Link Aset (Google Drive, YouTube, dll.)</label>
-            <Input id="assetUrl" value={assetUrl} onChange={(e) => setAssetUrl(e.target.value)} placeholder="https://..." />
+            <label htmlFor="assetFile" className="block text-sm font-medium text-gray-700">Unggah Aset Kampanye</label>
+            <Input id="assetFile" type="file" onChange={(e) => setAssetFile(e.target.files ? e.target.files[0] : null)} className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+            <p className="mt-1 text-sm text-gray-500">Opsional. Unggah gambar atau video pendek.</p>
           </div>
           <div>
             <label htmlFor="terms" className="block text-sm font-medium text-ray-700">Syarat & Ketentuan</label>

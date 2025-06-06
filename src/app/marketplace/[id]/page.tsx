@@ -13,7 +13,7 @@ type CampaignDetail = {
   description: string | null
   terms: string | null
   rate_per_10k_views: number
-  creator: { full_name: string | null } | null
+  profiles: { full_name: string | null } | null | { full_name: string | null }[]
   campaign_assets: { asset_url: string }[]
 }
 
@@ -40,7 +40,7 @@ export default function CampaignDetailPage() {
           description,
           terms,
           rate_per_10k_views,
-          creator:profiles ( full_name ),
+          profiles ( full_name ),
           campaign_assets ( asset_url )
         `)
         .eq('id', campaignId)
@@ -84,22 +84,32 @@ export default function CampaignDetailPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.from('submissions').insert({
-        campaign_id: campaignId,
-        promoter_id: user.id,
-        submitted_url: submittedUrl,
-        status: 'pending',
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          campaign_id: campaignId,
+          submitted_url: submittedUrl,
+        }),
       })
 
-      if (error) throw error
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal mengirimkan URL.')
+      }
 
       alert('URL berhasil disubmit! Anda akan diarahkan ke dasbor Anda.')
       router.push('/dashboard/promoter')
+      router.refresh()
+      
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message)
       } else {
-        setError('An unknown error occurred.')
+        setError('Terjadi kesalahan tidak diketahui.')
       }
     } finally {
       setSubmitLoading(false)
@@ -110,11 +120,15 @@ export default function CampaignDetailPage() {
   if (error) return <div className="container mx-auto p-8 text-center text-red-500">{error}</div>
   if (!campaign) return <div className="container mx-auto p-8 text-center">Kampanye tidak ditemukan.</div>
 
+  const creatorName = (Array.isArray(campaign.profiles)
+    ? campaign.profiles[0]?.full_name
+    : campaign.profiles?.full_name) || 'Kreator Anonim'
+
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-3xl">
       <div className="bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-3xl font-bold mb-2">{campaign.title}</h1>
-        <p className="text-md text-gray-600 mb-6">oleh {campaign.creator?.full_name || 'Kreator Anonim'}</p>
+        <p className="text-md text-gray-600 mb-6">oleh {creatorName}</p>
 
         <div className="prose max-w-none mb-6">
           <h2 className="text-xl font-semibold">Deskripsi</h2>
