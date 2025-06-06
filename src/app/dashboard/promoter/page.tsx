@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 type Submission = {
   id: string
@@ -16,20 +16,9 @@ type Submission = {
 export default function PromoterDashboard() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
-  useEffect(() => {
-    const fetchUserAndSubmissions = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        fetchSubmissions(user.id)
-      } else {
-        window.location.href = '/login'
-      }
-    }
-    fetchUserAndSubmissions()
-  }, [])
-
-  const fetchSubmissions = async (promoterId: string) => {
+  const fetchSubmissions = useCallback(async (promoterId: string) => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -55,7 +44,19 @@ export default function PromoterDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    const fetchUserAndSubmissions = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        fetchSubmissions(user.id)
+      } else {
+        window.location.href = '/login'
+      }
+    }
+    fetchUserAndSubmissions()
+  }, [supabase.auth, fetchSubmissions])
 
   return (
     <div className="container mx-auto p-4 md:p-8">

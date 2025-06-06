@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useParams, useRouter } from 'next/navigation'
@@ -27,6 +27,7 @@ export default function CampaignDetailPage() {
   const params = useParams()
   const router = useRouter()
   const campaignId = params.id as string
+  const supabase = createClient()
 
   const fetchCampaignDetails = useCallback(async () => {
     try {
@@ -55,7 +56,7 @@ export default function CampaignDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [campaignId])
+  }, [campaignId, supabase])
 
   useEffect(() => {
     const getUser = async () => {
@@ -66,7 +67,7 @@ export default function CampaignDetailPage() {
     if (campaignId) {
       fetchCampaignDetails()
     }
-  }, [campaignId, fetchCampaignDetails])
+  }, [campaignId, fetchCampaignDetails, supabase.auth])
 
   const handleSubmitUrl = async (e: React.FormEvent) => {
     e.preventDefault()

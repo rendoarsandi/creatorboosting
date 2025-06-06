@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
@@ -31,22 +31,9 @@ export default function CreatorDashboard() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('Pengguna')
+  const supabase = createClient()
 
-  useEffect(() => {
-    const fetchUserAndCampaigns = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUser(user)
-        setUserName(user.user_metadata.full_name || user.email || 'Pengguna')
-        fetchCampaigns(user.id)
-      } else {
-        window.location.href = '/login'
-      }
-    }
-    fetchUserAndCampaigns()
-  }, [])
-
-  const fetchCampaigns = async (creatorId: string) => {
+  const fetchCampaigns = useCallback(async (creatorId: string) => {
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -66,7 +53,21 @@ export default function CreatorDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    const fetchUserAndCampaigns = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUser(user)
+        setUserName(user.user_metadata.full_name || user.email || 'Pengguna')
+        fetchCampaigns(user.id)
+      } else {
+        window.location.href = '/login'
+      }
+    }
+    fetchUserAndCampaigns()
+  }, [supabase.auth, fetchCampaigns])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()

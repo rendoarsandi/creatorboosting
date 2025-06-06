@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useRouter } from 'next/navigation'
@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [fullName, setFullName] = useState('')
   const router = useRouter()
+  const supabase = createClient()
 
   const getProfile = useCallback(async (currentUser: User) => {
     try {
@@ -46,7 +47,7 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
@@ -59,7 +60,7 @@ export default function ProfilePage() {
       }
     }
     fetchUserAndProfile()
-  }, [router, getProfile])
+  }, [router, getProfile, supabase.auth])
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()

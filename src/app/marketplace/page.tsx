@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
@@ -17,6 +17,7 @@ type Campaign = {
 export default function MarketplacePage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
     const fetchActiveCampaigns = async () => {
@@ -47,7 +48,7 @@ export default function MarketplacePage() {
     }
 
     fetchActiveCampaigns()
-  }, [])
+  }, [supabase])
 
   return (
     <div className="container mx-auto p-4 md:p-8">
