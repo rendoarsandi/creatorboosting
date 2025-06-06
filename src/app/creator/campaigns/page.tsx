@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from "@/components/ui/table"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/components/mock-auth"
-// import type { User } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase"
+import type { User } from "@supabase/supabase-js"
 
 interface Campaign {
   id: string
@@ -21,61 +21,40 @@ interface Campaign {
   created_at: string
 }
 
-const mockCampaigns: Campaign[] = [
-  {
-    id: "1",
-    title: "Demo Campaign: Summer Sale",
-    status: "active",
-    budget: 1000,
-    price_per_engagement: 0.5,
-    target_metric: "clicks",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    title: "Demo Campaign: New Product Launch",
-    status: "draft",
-    budget: 2500,
-    price_per_engagement: 1.2,
-    target_metric: "signups",
-    created_at: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
-  },
-  {
-    id: "3",
-    title: "Old Campaign: Winter Special",
-    status: "completed",
-    budget: 500,
-    price_per_engagement: 0.25,
-    target_metric: "views",
-    created_at: new Date(Date.now() - 86400000 * 30).toISOString(), // 30 days ago
-  },
-]
-
 export default function CreatorCampaignsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const { user } = useAuth()
+  const supabase = createClient()
+  const [user, setUser] = useState<User | null>(null)
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user || user.role !== 'creator') {
-      toast({ title: "Unauthorized", description: "You must be logged in as a Creator to view this page.", variant: "destructive" })
-      router.push("/auth/login")
-      return
+    const fetchData = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast({ title: "Unauthorized", description: "You must be logged in to view this page.", variant: "destructive" })
+        router.push("/auth/login")
+        return
+      }
+      setUser(user)
+
+      // TODO: Fetch campaigns from Supabase
+      // const { data, error } = await supabase
+      //   .from('campaigns')
+      //   .select('*')
+      //   .eq('creator_id', user.id)
+      
+      // For now, we'll use an empty array
+      setCampaigns([])
+      setLoading(false)
     }
 
-    // Simulate fetching data
-    setLoading(true)
-    setTimeout(() => {
-      // TODO: Replace with actual data fetching from Cloudflare D1
-      setCampaigns(mockCampaigns)
-      setLoading(false)
-    }, 1000)
-  }, [user, router, toast])
+    fetchData()
+  }, [router, toast, supabase.auth])
   
-  if (!user) {
-    return <div className="flex items-center justify-center min-h-screen"><p>Loading or redirecting...</p></div>
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen"><p>Loading...</p></div>
   }
 
   return (

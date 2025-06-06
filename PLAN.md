@@ -1,74 +1,78 @@
-# Rencana Implementasi: Platform Pemasaran (Full Cloudflare Stack)
+# Rencana Implementasi: Platform Pemasaran (Vercel & Supabase Stack)
 
-Dokumen ini menguraikan langkah-langkah teknis untuk membangun dan mendeploy platform pemasaran berdasarkan PRD, menggunakan tumpukan teknologi penuh dari Cloudflare.
+Dokumen ini menguraikan langkah-langkah teknis untuk membangun dan mendeploy platform pemasaran berdasarkan PRD, menggunakan tumpukan teknologi Vercel dan Supabase.
 
-## 1. Arsitektur Teknis (Cloudflare Native)
+## 1. Arsitektur Teknis (Vercel & Supabase)
 
-- **Frontend**: Next.js (App Router), dihosting di **Cloudflare Pages**.
-- **Backend/API**: **Cloudflare Workers** (dapat diintegrasikan dengan Next.js API Routes atau sebagai service terpisah).
-- **Database**: **Cloudflare D1** (Database SQL).
-- **Penyimpanan File**: **Cloudflare R2** (Untuk aset kampanye, bukti performa).
-- **Autentikasi**: **Cloudflare Access** (Zero Trust) untuk mengamankan rute aplikasi.
-- **Proteksi Bot**: **Cloudflare Turnstile** pada formulir publik (Login/Signup).
+- **Frontend**: Next.js (App Router), dihosting di **Vercel**.
+- **Backend/API**: Next.js API Routes, dihosting di **Vercel**.
+- **Database**: **Supabase Postgres** (Database SQL).
+- **Penyimpanan File**: **Supabase Storage** (Untuk aset kampanye, bukti performa).
+- **Autentikasi**: **Supabase Auth** (Email/Password, Social Logins).
 - **UI**: Shadcn UI, Tailwind CSS.
 - **Bahasa**: TypeScript.
 
-## 2. Penyiapan Infrastruktur & Keamanan Cloudflare
+## 2. Penyiapan Infrastruktur & Keamanan Supabase
 
 **Langkah-langkah:**
-1.  **Setup Cloudflare D1 & R2**: Membuat database D1 dan bucket R2.
-2.  **Konfigurasi Cloudflare Access**:
-    - Membuat "Application" di Zero Trust Dashboard.
-    - Mengonfigurasi "Identity Providers" (misal: Google, GitHub, atau One-Time Pin via Email).
-    - Menentukan "Policies" untuk melindungi rute spesifik (misal: `/creator/*`, `/profile`). Rute publik seperti `/auth/login` akan dibiarkan tidak terlindungi.
-3.  **Konfigurasi Cloudflare Turnstile**:
-    - Membuat "Site" baru di dashboard Turnstile untuk mendapatkan `Site Key` dan `Secret Key`.
-4.  **Binding & Variabel Lingkungan**:
-    - Menghubungkan D1 dan R2 ke proyek Cloudflare Pages.
-    - Menambahkan `TURNSTILE_SECRET_KEY` sebagai variabel lingkungan di proyek.
+1.  **Setup Proyek Supabase**:
+    - Membuat proyek baru di [supabase.com](https://supabase.com).
+    - Mendapatkan URL Proyek dan `anon` key dari pengaturan API.
+2.  **Desain Skema Database**:
+    - Mendesain dan membuat tabel yang diperlukan (`profiles`, `campaigns`, dll.) menggunakan Supabase Studio (SQL Editor).
+    - Mengaktifkan Row Level Security (RLS) pada tabel untuk mengontrol akses data.
+3.  **Konfigurasi Supabase Auth**:
+    - Mengonfigurasi provider otentikasi (misalnya, Email/Password, Google, GitHub).
+    - Menyesuaikan template email jika diperlukan.
+4.  **Variabel Lingkungan**:
+    - Membuat file `.env.local` untuk pengembangan lokal.
+    - Menambahkan `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` ke `.env.local` dan ke pengaturan proyek Vercel.
 
 ## 3. Rencana Pengembangan Fitur (MVP)
 
-### Tahap 1: Fondasi & Otentikasi (Strategi Hybrid)
+### Tahap 1: Fondasi & Otentikasi (Sudah Selesai)
 - **Tugas**:
-    - **Halaman Login/Signup Kustom**:
-        - Mempertahankan UI di `/auth/login` dan `/auth/signup`.
-        - Mengintegrasikan widget **Cloudflare Turnstile** pada formulir ini untuk mencegah spam.
-        - **Mengubah Tombol Login**: Tombol "Login" tidak lagi mengirimkan form, melainkan mengarahkan pengguna ke URL aplikasi yang disediakan oleh **Cloudflare Access**.
+    - **Halaman Login/Signup**:
+        - Membuat formulir login dan signup kustom di `/auth/login` dan `/auth/signup`.
+        - Mengintegrasikan dengan **Supabase Auth** untuk menangani pendaftaran dan login pengguna.
     - **Middleware (`src/middleware.ts`)**:
-        - Middleware tidak lagi menangani logika login/logout secara langsung.
-        - Tugasnya adalah memverifikasi JWT yang ada di cookie `CF_Authorization` setelah pengguna berhasil login melalui Cloudflare Access.
-        - Informasi pengguna (misal: email) dari token JWT akan digunakan untuk personalisasi di dalam aplikasi.
-    - **Skema Database**: Mendesain skema tabel `users` dan `profiles` di **D1** untuk menyimpan data aplikasi yang terkait dengan email pengguna dari token Access.
-    - **Halaman Profil**: Menampilkan informasi pengguna yang didapat dari token JWT.
+        - Menggunakan middleware Next.js dengan `@supabase/ssr` untuk mengelola sesi pengguna.
+        - Melindungi rute yang memerlukan otentikasi (misalnya, `/profile`, `/creator/*`).
+    - **Skema Database**:
+        - Tabel `users` secara otomatis dikelola oleh Supabase Auth.
+        - Perlu membuat tabel `profiles` untuk menyimpan data pengguna tambahan, yang ditautkan ke `users.id`.
+    - **Halaman Profil**:
+        - Menampilkan informasi pengguna (misalnya, email) dari sesi Supabase.
+        - Menyediakan fungsionalitas logout.
 
 ### Tahap 2: Fungsionalitas Kreator
 - **Tugas**:
-    - Mendesain skema tabel `campaigns` di **D1**.
+    - Mendesain skema tabel `campaigns` di **Supabase**.
     - Halaman dashboard untuk Kreator (`/creator/campaigns`).
     - Formulir pembuatan kampanye baru (`/creator/campaigns/new`).
-    - API di **Workers** untuk menyimpan data kampanye ke **D1** dan aset ke **R2**.
+    - API Routes di Next.js untuk menyimpan data kampanye ke **Supabase DB** dan aset ke **Supabase Storage**.
     - Menampilkan daftar kampanye yang dibuat oleh kreator.
 
 ### Tahap 3: Fungsionalitas Promotor
 - **Tugas**:
-    - Mendesain skema tabel `submissions` dan `clicks` di **D1**.
+    - Mendesain skema tabel `submissions` dan `clicks` di **Supabase**.
     - Halaman untuk menampilkan semua kampanye yang tersedia.
     - Fungsionalitas bagi promotor untuk mengajukan diri (menyimpan ke `submissions`).
-    - Logika di **Workers** untuk membuat tautan pelacakan unik dan mencatat klik.
+    - Logika di API Routes untuk membuat tautan pelacakan unik dan mencatat klik.
 
 ## 4. Deployment & Operasi
 
 **Strategi**:
-- **Source**: Menghubungkan repositori Git ke **Cloudflare Pages**.
-- **Build Command**: `npm run build`
-- **Output Directory**: `.next` (atau sesuai konfigurasi Pages).
-- **Variabel Lingkungan**: Mengonfigurasi variabel rahasia (secrets) melalui dashboard Cloudflare untuk API keys atau token.
+- **Platform**: **Vercel**.
+- **Source**: Menghubungkan repositori Git ke Vercel.
+- **Build Command**: `npm run build` (dideteksi otomatis oleh Vercel).
+- **Output Directory**: `.next` (dideteksi otomatis oleh Vercel).
+- **Variabel Lingkungan**: Mengonfigurasi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` di dashboard Vercel.
 - **CI/CD**: Deployment otomatis setiap kali ada push ke branch utama.
 
 ## 5. Langkah Selanjutnya (Pasca-MVP)
 
-- Implementasi dashboard analitik menggunakan data dari **D1**.
-- Integrasi sistem pembayaran.
-- Sistem notifikasi (bisa menggunakan layanan email pihak ketiga yang dipicu oleh Workers).
+- Implementasi dashboard analitik menggunakan data dari **Supabase**.
+- Integrasi sistem pembayaran (misalnya, Stripe).
+- Sistem notifikasi (bisa menggunakan layanan email pihak ketiga yang dipicu oleh Supabase Functions atau API Routes).
 - Penyempurnaan fitur deteksi fraud.

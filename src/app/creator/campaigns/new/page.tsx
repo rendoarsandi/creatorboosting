@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea" // Pastikan ini sudah dibuat
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/components/mock-auth"
-// import type { User } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase"
+import type { User } from "@supabase/supabase-js"
 
 interface CampaignFormData {
   title: string
@@ -25,8 +25,9 @@ interface CampaignFormData {
 export default function CreateCampaignPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
+  const supabase = createClient()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState<CampaignFormData>({
     title: "",
     description: "",
@@ -38,11 +39,18 @@ export default function CreateCampaignPage() {
   })
 
   useEffect(() => {
-    if (!user || user.role !== 'creator') {
-      toast({ title: "Unauthorized", description: "You must be logged in as a Creator.", variant: "destructive" })
-      router.push("/auth/login")
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        toast({ title: "Unauthorized", description: "You must be logged in to create a campaign.", variant: "destructive" })
+        router.push("/auth/login")
+      } else {
+        setUser(user)
+      }
+      setLoading(false)
     }
-  }, [user, router, toast])
+    getUser()
+  }, [router, toast, supabase.auth])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
@@ -54,8 +62,15 @@ export default function CreateCampaignPage() {
 
   const handleCreateCampaign = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!user) {
+      toast({ title: "Error", description: "You must be logged in.", variant: "destructive" })
+      return
+    }
     setLoading(true)
-    // TODO: Implement campaign creation with Cloudflare D1 and R2
+    
+    // TODO: Implement campaign creation with Supabase
+    // const { data, error } = await supabase.from('campaigns').insert([{ ...formData, creator_id: user.id }])
+    
     toast({
       title: "Feature Not Implemented",
       description: "Campaign creation is currently disabled.",
@@ -64,8 +79,8 @@ export default function CreateCampaignPage() {
     setLoading(false)
   }
 
-  if (!user) {
-    return <div className="flex items-center justify-center min-h-screen"><p>Loading or redirecting...</p></div>
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen"><p>Loading...</p></div>
   }
 
 
@@ -109,7 +124,7 @@ export default function CreateCampaignPage() {
               <Textarea id="requirements" name="requirements" value={formData.requirements} onChange={handleChange} placeholder="Describe specific requirements for promoters..." disabled={loading} />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating Campaign..." : "Create Campaign"}
+              {loading ? "Submitting..." : "Create Campaign"}
             </Button>
           </form>
         </CardContent>
