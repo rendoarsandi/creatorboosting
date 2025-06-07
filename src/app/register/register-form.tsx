@@ -28,36 +28,41 @@ export default function RegisterForm({ user }: RegisterFormProps) {
     setError(null)
 
     try {
-      // 1. Update user metadata
-      const { data: { user: updatedUser }, error: userError } = await supabase.auth.updateUser({
-        data: {
-          full_name: fullName,
-          role: role,
-        }
-      })
-
-      if (userError) throw userError
-      if (!updatedUser) throw new Error("User not updated")
-
-      // 2. Create profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: updatedUser.id,
+      // Cukup sisipkan profil baru. Pemicu database akan dihapus.
+      // Data pengguna (seperti avatar dari Google) sudah ada di objek `user`.
+      const { error } = await supabase.from('profiles').insert({
+        id: user.id,
         full_name: fullName,
         role: role,
-        avatar_url: updatedUser.user_metadata.avatar_url
+        avatar_url: user.user_metadata.avatar_url,
       })
 
-      if (profileError) throw profileError
+      if (error) {
+        // Mungkin profil sudah ada karena race condition, coba upsert sebagai fallback.
+        if (error.code === '23505') { // unique_violation
+          const { error: upsertError } = await supabase.from('profiles').upsert({
+            id: user.id,
+            full_name: fullName,
+            role: role,
+            avatar_url: user.user_metadata.avatar_url,
+          }).eq('id', user.id)
+          if (upsertError) throw upsertError;
+        } else {
+          throw error;
+        }
+      }
 
       alert('Pendaftaran berhasil diselesaikan!')
-      router.push('/profile')
+      // Arahkan ke dasbor yang sesuai
+      const targetDashboard = role === 'creator' ? '/dashboard/creator' : '/dashboard/promoter';
+      router.push(targetDashboard)
       router.refresh()
 
     } catch (error) {
       if (error instanceof Error) {
-        setError(error.message)
+        setError(`Gagal mendaftar: ${error.message}`)
       } else {
-        setError('An unknown error occurred during registration.')
+        setError('Terjadi kesalahan tidak diketahui saat pendaftaran.')
       }
     } finally {
       setLoading(false)

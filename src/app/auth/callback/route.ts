@@ -31,15 +31,25 @@ export async function GET(request: NextRequest) {
     )
     const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error && session) {
-      const { data: profile } = await supabase
+      // Cek apakah profil sudah ada
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', session.user.id)
         .single()
 
+      // Abaikan error "no rows" karena itu berarti profil belum ada
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error checking for profile:', profileError)
+        // Arahkan ke halaman error jika ada masalah lain
+        return NextResponse.redirect(`${origin}/login?error=Database-check-failed`)
+      }
+
+      // Jika profil sudah ada, arahkan ke dasbor
       if (profile) {
-        return NextResponse.redirect(`${origin}/profile`)
+        return NextResponse.redirect(`${origin}/dashboard/creator`) // atau /dashboard/promoter
       } else {
+        // Jika tidak ada profil, pengguna baru via OAuth. Arahkan ke registrasi untuk memilih peran.
         return NextResponse.redirect(`${origin}/register`)
       }
     }
