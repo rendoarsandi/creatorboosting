@@ -15,16 +15,16 @@ export default async function ProfilePage() {
     redirect('/login')
   }
 
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from('profiles')
-    .select(`full_name, avatar_url, role`)
+    .select('*')
     .eq('id', session.user.id)
     .single()
 
-  if (error) {
-    console.error('Error fetching profile:', error)
-    // Handle the error appropriately
-  }
-
-  return <ProfileForm user={session.user} profile={profile} />
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Profil Saya</h1>
+      <ProfileForm profile={profile} />
+    </div>
+  )
 }

@@ -58,7 +58,19 @@ export async function middleware(request: NextRequest) {
 
   // Jika pengguna sudah login dan mencoba mengakses halaman login/register
   if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register')) {
-    return NextResponse.redirect(new URL('/profile', request.url))
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role === 'creator') {
+      return NextResponse.redirect(new URL('/dashboard/creator', request.url))
+    } else if (profile?.role === 'promoter') {
+      return NextResponse.redirect(new URL('/dashboard/promoter', request.url))
+    } else {
+      return NextResponse.redirect(new URL('/profile', request.url))
+    }
   }
 
   return response

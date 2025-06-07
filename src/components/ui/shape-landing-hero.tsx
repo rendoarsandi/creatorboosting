@@ -87,14 +87,23 @@ function HeroGeometric({
 }) {
     const [user, setUser] = useState<User | null>(null);
     const supabase = createClient();
+    const [role, setRole] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
             const { data } = await supabase.auth.getUser();
             setUser(data.user);
+            if (data.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .single();
+                setRole(profile?.role || null);
+            }
         };
         fetchUser();
-    }, [supabase.auth]);
+    }, [supabase]);
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
@@ -222,7 +231,7 @@ function HeroGeometric({
                     >
                         {user ? (
                             <>
-                                <Link href="/dashboard/creator">
+                                <Link href={role === 'promoter' ? '/dashboard/promoter' : '/dashboard/creator'}>
                                     <Button variant="outline" size="lg">Dashboard</Button>
                                 </Link>
                                 <Button variant="default" size="lg" onClick={handleLogout}>Logout</Button>
