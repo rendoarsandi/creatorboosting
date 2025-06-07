@@ -1,9 +1,9 @@
-name = "amplify-on-cloudflare"
+name = "creatorboosting"
 compatibility_date = "2024-06-05"
 pages_build_output_dir = ".next"
 
-# Binding D1 Database to Cloudflare Pages Functions
+# Binding D1 Database to our Pages Functions
 [[d1_databases]]
-binding = "DB"
+binding = "DB" # This is how our function will access the DB (c.env.DB)
 database_name = "amplify-db"
 database_id = "513a80eb-0d5b-429d-9947-f02f8c868334"
