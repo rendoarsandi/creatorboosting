@@ -5,6 +5,9 @@ import { Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 
 
 function ElegantShape({
@@ -82,6 +85,23 @@ function HeroGeometric({
     title1?: string;
     title2?: string;
 }) {
+    const [user, setUser] = useState<User | null>(null);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data } = await supabase.auth.getUser();
+            setUser(data.user);
+        };
+        fetchUser();
+    }, [supabase.auth]);
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        // Mungkin perlu me-refresh halaman atau mengarahkan pengguna
+    };
+
     const fadeUpVariants = {
         hidden: { opacity: 0, y: 30 },
         visible: (i: number) => ({
@@ -200,12 +220,23 @@ function HeroGeometric({
                         animate="visible"
                         className="flex gap-4 justify-center"
                     >
-                        <Link href="/login">
-                            <Button variant="outline" size="lg">Sign In</Button>
-                        </Link>
-                        <Link href="/register">
-                            <Button variant="default" size="lg">Sign Up</Button>
-                        </Link>
+                        {user ? (
+                            <>
+                                <Link href="/dashboard/creator">
+                                    <Button variant="outline" size="lg">Dashboard</Button>
+                                </Link>
+                                <Button variant="default" size="lg" onClick={handleLogout}>Logout</Button>
+                            </>
+                        ) : (
+                            <>
+                                <Link href="/login">
+                                    <Button variant="outline" size="lg">Sign In</Button>
+                                </Link>
+                                <Link href="/register">
+                                    <Button variant="default" size="lg">Sign Up</Button>
+                                </Link>
+                            </>
+                        )}
                     </motion.div>
                 </div>
             </div>

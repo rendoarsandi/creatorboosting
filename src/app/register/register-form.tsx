@@ -28,28 +28,18 @@ export default function RegisterForm({ user }: RegisterFormProps) {
     setError(null)
 
     try {
-      // Cukup sisipkan profil baru. Pemicu database akan dihapus.
-      // Data pengguna (seperti avatar dari Google) sudah ada di objek `user`.
-      const { error } = await supabase.from('profiles').insert({
-        id: user.id,
-        full_name: fullName,
-        role: role,
-        avatar_url: user.user_metadata.avatar_url,
-      })
+      // Perbarui profil yang ada, yang seharusnya sudah dibuat oleh pemicu.
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          role: role,
+          avatar_url: user.user_metadata.avatar_url,
+        })
+        .eq('id', user.id)
 
       if (error) {
-        // Mungkin profil sudah ada karena race condition, coba upsert sebagai fallback.
-        if (error.code === '23505') { // unique_violation
-          const { error: upsertError } = await supabase.from('profiles').upsert({
-            id: user.id,
-            full_name: fullName,
-            role: role,
-            avatar_url: user.user_metadata.avatar_url,
-          }).eq('id', user.id)
-          if (upsertError) throw upsertError;
-        } else {
-          throw error;
-        }
+        throw error
       }
 
       alert('Pendaftaran berhasil diselesaikan!')
