@@ -11,19 +11,19 @@
 
 - [ ] **Proyek Next.js:** Inisialisasi proyek Next.js baru menggunakan `create-next-app`.
 - [ ] **Integrasi Vercel:** Hubungkan repositori Git ke Vercel untuk CI/CD (Continuous Integration/Continuous Deployment).
-- [ ] **Proyek Supabase:**
-    - [ ] Buat proyek baru di Supabase.
-    - [ ] Aktifkan layanan: Auth, Database (Postgres), Storage.
-- [ ] **Konfigurasi Environment:**
-    - [ ] Simpan `SUPABASE_URL` dan `SUPABASE_ANON_KEY` sebagai environment variables di Next.js (file `.env.local`).
-    - [ ] Tambahkan variabel yang sama ke pengaturan environment di Vercel.
-- [ ] **Struktur Folder:**
-    - [ ] Buat struktur direktori awal: `src/app`, `src/components`, `src/lib`, `src/styles`.
-    - [ ] Setup `shadcn/ui` untuk komponen UI.
-- [ ] **Inisialisasi Database:**
-    - [ ] Buat skema awal menggunakan Supabase Studio SQL Editor.
-    - [ ] Buat tabel `profiles` dengan kolom: `id` (UUID, foreign key ke `auth.users`), `role` (ENUM: 'creator', 'promoter'), `full_name`, `avatar_url`.
-    - [ ] Atur RLS (Row Level Security) pada tabel `profiles` agar pengguna hanya bisa melihat dan mengedit profil mereka sendiri.
+- [x] **Proyek Supabase:**
+    - [x] Buat proyek baru di Supabase.
+    - [x] Aktifkan layanan: Auth, Database (Postgres), Storage.
+- [x] **Konfigurasi Environment:**
+    - [x] Simpan `SUPABASE_URL` dan `SUPABASE_ANON_KEY` sebagai environment variables di Next.js (file `.env.local`).
+    - [x] Tambahkan variabel yang sama ke pengaturan environment di Vercel.
+- [x] **Struktur Folder:**
+    - [x] Buat struktur direktori awal: `src/app`, `src/components`, `src/lib`, `src/styles`.
+    - [x] Setup `shadcn/ui` untuk komponen UI.
+- [x] **Inisialisasi Database:**
+    - [x] Buat skema awal menggunakan Supabase Studio SQL Editor.
+    - [x] Buat tabel `profiles` dengan kolom: `id` (UUID, foreign key ke `auth.users`), `role` (ENUM: 'creator', 'promoter'), `full_name`, `avatar_url`.
+    - [x] Atur RLS (Row Level Security) pada tabel `profiles` agar pengguna hanya bisa melihat dan mengedit profil mereka sendiri.
 
 ---
 
@@ -69,17 +69,17 @@
 - [ ] **Integrasi Payment Gateway:**
     - [ ] Pilih dan daftar ke layanan Payment Gateway (Midtrans/Xendit).
     - [x] Implementasikan SDK mereka di sisi frontend untuk proses top-up. (UI/Kerangka dibuat)
-    - [ ] Buat webhook di Next.js API Route untuk menerima notifikasi status pembayaran dari payment gateway dan memperbarui saldo di tabel `wallets`.
+    - [x] Buat webhook di Next.js API Route untuk menerima notifikasi status pembayaran dari payment gateway dan memperbarui saldo di tabel `wallets`. (Kerangka dibuat)
 - [x] **Logika Withdrawal:**
     - [x] Buat halaman dan form untuk permintaan withdrawal. (UI/Kerangka dibuat)
     - [ ] Buat proses admin manual terlebih dahulu untuk mengirim uang, sebelum membangun sistem otomatis.
-- [x] **Fungsi Transfer Internal:** Buat Postgres Function `create_transfer(from_id, to_id, amount)` yang secara transaksional mengurangi saldo pengirim dan menambah saldo penerima untuk memastikan atomicity.
+- [x] **Fungsi Transfer Internal:** Buat Postgres Function `create_transfer(from_id, to_id, amount)` yang secara transaksional mengurangi saldo pengirim dan menambah saldo penerima untuk memastikan atomicity. (Fungsi dibuat)
 
 ### Epic: Pelacakan Performa Otomatis
 - [x] **Riset Scraping:** Lakukan riset teknis untuk metode scraping yang paling andal dan tidak mudah diblokir untuk TikTok, Instagram Reels, dan YouTube Shorts. Pertimbangkan penggunaan library seperti `puppeteer` atau `playwright` di dalam Edge Function. (Konsep divalidasi)
 - [x] **Edge Function: View Scraper:**
     - [x] Buat Supabase Edge Function pertama (`view-scraper`) yang menerima satu `submitted_url` sebagai argumen. (Kerangka dibuat)
-    - [ ] Implementasikan logika scraping untuk mengambil jumlah views. (Simulasi dibuat)
+    - [x] Implementasikan logika scraping untuk mengambil jumlah views. (Implementasi dasar dengan Cheerio)
     - [ ] Atur cron job (Supabase Scheduled Functions) untuk menjalankan fungsi ini setiap 4-6 jam, mengambil batch `submissions` yang statusnya 'active'.
 - [x] **Edge Function: Payment Calculator:**
     - [x] Buat Supabase Edge Function kedua (`payment-calculator`) yang dipicu setelah `view-scraper` selesai. (Kerangka dibuat)
@@ -87,7 +87,7 @@
         1.  Mengambil `submissions` yang baru diperbarui.
         2.  Menghitung selisih views (`new_views - tracked_views`).
         3.  Menghitung jumlah pembayaran.
-        4.  Memanggil fungsi `create_transfer` untuk memindahkan dana.
+        4.  Memanggil fungsi `create_transfer` untuk memindahkan dana. (Implementasi selesai)
         5.  Memperbarui `tracked_views` di tabel `submissions`. (Logika `views_paid_for` diimplementasikan)
 
 ---
@@ -103,11 +103,32 @@
     - [x] Buat tabel `notifications` (`id`, `user_id`, `message`, `is_read`).
     - [x] Buat komponen UI untuk menampilkan notifikasi di dalam aplikasi.
     - [ ] (Opsional) Integrasikan dengan layanan email (misal: Resend) untuk notifikasi penting.
-- [ ] **Panel Admin:**
-    - [ ] Buat halaman-halaman khusus di bawah rute `/admin` yang hanya bisa diakses oleh peran 'admin'.
-    - [ ] Implementasikan fungsionalitas dasar untuk manajemen pengguna dan kampanye.
+- [x] **Panel Admin:**
+    - [x] Buat halaman-halaman khusus di bawah rute `/admin` yang hanya bisa diakses oleh peran 'admin'.
+    - [x] Implementasikan fungsionalitas dasar untuk manajemen pengguna dan kampanye. (Manajemen Pengguna & Kampanye Selesai)
 - [ ] **Optimasi & Keamanan:**
     - [ ] Lakukan peninjauan keamanan menyeluruh pada semua RLS policy dan API routes.
     - [ ] Optimalkan query database yang lambat.
     - [ ] Lakukan pengujian beban (load testing) pada Edge Function scraper.
     - [ ] Tambahkan indeks pada kolom-kolom tabel database yang sering di-query.
+
+---
+
+## Fase 4: Konsep Marketplace Aset Digital & Demo Interaktif
+
+*Tujuan: Merancang dan mengimplementasikan pengalaman pengguna baru untuk menarik kreator dengan menyediakan dasbor demo interaktif.*
+
+- [x] **Skema & Data Mock:**
+   - [x] Buat tabel `products`, `sales`, dan `reviews`.
+   - [x] Buat API route aman (`/api/admin/setup-demo`) untuk membuat pengguna demo dan mengisi data mock.
+- [x] **Alur Demo Pengguna:**
+   - [x] Buat API route (`/api/auth/demo`) untuk me-login pengguna sebagai akun demo.
+   - [x] Tambahkan tombol "Coba Dashboard Demo" di halaman utama.
+- [x] **Desain Dasbor Demo:**
+   - [x] Buat fungsi-fungsi database (RPC) untuk mengambil statistik, penjualan, dan produk terlaris.
+   - [x] Bangun komponen UI untuk dasbor: Widget Statistik, Grafik Penjualan, Tabel Produk Terlaris, Feed Aktivitas.
+   - [x] Implementasikan halaman dasbor penjual yang lengkap dan berbasis data.
+- [x] **Desain Ulang Halaman Marketplace:**
+   - [x] Ubah halaman menjadi komponen sisi server.
+   - [x] Implementasikan layout grid modern dengan kartu produk interaktif.
+   - [x] Tambahkan kerangka untuk fungsionalitas filter dan urutkan.

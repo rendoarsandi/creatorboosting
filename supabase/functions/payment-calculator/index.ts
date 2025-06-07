@@ -63,10 +63,11 @@ serve(async (req) => {
       // 4. Panggil fungsi 'create_transfer' di database.
       // Fungsi ini sudah memiliki pengecekan saldo di dalamnya.
       const { error: rpcError } = await supabaseAdmin.rpc('create_transfer', {
-        from_id: submission.campaigns.creator_id,
-        to_id: submission.promoter_id,
+        from_user_id: submission.campaigns.creator_id,
+        to_user_id: submission.promoter_id,
         amount_to_transfer: paymentAmount,
-        submission_id: submission.id,
+        transfer_type: 'campaign_payment',
+        related_entity: submission.id,
       });
 
       if (rpcError) {

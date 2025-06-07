@@ -229,11 +229,11 @@ function HeroGeometric({
                             </>
                         ) : (
                             <>
+                                <Link href="/api/auth/demo">
+                                    <Button variant="default" size="lg">Coba Dashboard Demo</Button>
+                                </Link>
                                 <Link href="/login">
                                     <Button variant="outline" size="lg">Sign In</Button>
-                                </Link>
-                                <Link href="/register">
-                                    <Button variant="default" size="lg">Sign Up</Button>
                                 </Link>
                             </>
                         )}

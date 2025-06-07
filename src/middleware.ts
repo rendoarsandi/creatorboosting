@@ -39,8 +39,21 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Jika pengguna tidak login dan mencoba mengakses rute yang dilindungi
-  if (!user && (request.nextUrl.pathname.startsWith('/profile') || request.nextUrl.pathname.startsWith('/dashboard'))) {
+  if (!user && (request.nextUrl.pathname.startsWith('/profile') || request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/admin'))) {
     return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Jika pengguna sudah login, periksa peran untuk rute admin
+  if (user && request.nextUrl.pathname.startsWith('/admin')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
   }
 
   // Jika pengguna sudah login dan mencoba mengakses halaman login/register
