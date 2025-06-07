@@ -108,7 +108,8 @@ function HeroGeometric({
     const handleLogout = async () => {
         await supabase.auth.signOut();
         setUser(null);
-        // Mungkin perlu me-refresh halaman atau mengarahkan pengguna
+        setRole(null);
+        window.location.reload(); // Refresh halaman untuk memperbarui status UI
     };
 
     const fadeUpVariants = {
@@ -232,7 +233,7 @@ function HeroGeometric({
                         {user ? (
                             <>
                                 <Link href={role === 'promoter' ? '/dashboard/promoter' : '/dashboard/creator'}>
-                                    <Button variant="outline" size="lg">Dashboard</Button>
+                                    <Button variant="outline" size="lg">Go to Dashboard</Button>
                                 </Link>
                                 <Button variant="default" size="lg" onClick={handleLogout}>Logout</Button>
                             </>

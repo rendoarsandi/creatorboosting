@@ -3,21 +3,31 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 // PENTING: Kredensial ini harus cocok dengan pengguna yang dibuat oleh endpoint setup-demo.
-// Untuk produksi nyata, Anda akan mengambil ini dari variabel lingkungan atau layanan konfigurasi.
-const DEMO_USER_EMAIL = process.env.DEMO_USER_EMAIL || 'demo@example.com'
-const DEMO_USER_PASSWORD = process.env.DEMO_USER_PASSWORD || 'password123'
-
 export async function GET(request: Request) {
   const cookieStore = cookies()
   const supabase = await createClient(cookieStore)
 
-  // 1. Logout dari sesi yang mungkin ada
+  // 1. Ambil kredensial demo dari app_meta
+  const { data: demoCredentials, error: metaError } = await supabase
+    .from('app_meta')
+    .select('value')
+    .eq('key', 'demo_credentials')
+    .single()
+
+  if (metaError || !demoCredentials) {
+    console.error('Gagal mengambil kredensial demo:', metaError)
+    return NextResponse.redirect(new URL('/demo-setup-required', request.url))
+  }
+
+  const { email, password } = demoCredentials.value as { email: string, password: string }
+
+  // 2. Logout dari sesi yang mungkin ada
   await supabase.auth.signOut()
 
-  // 2. Login sebagai pengguna demo
+  // 3. Login sebagai pengguna demo
   const { error } = await supabase.auth.signInWithPassword({
-    email: DEMO_USER_EMAIL,
-    password: DEMO_USER_PASSWORD,
+    email,
+    password,
   })
 
   if (error) {

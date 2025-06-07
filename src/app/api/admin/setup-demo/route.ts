@@ -74,5 +74,11 @@ export async function POST() {
     { product_id: productMap.get('UI Kit Dasbor SaaS'), reviewer_name: 'Alex Ray', rating: 5, comment: 'Kualitas terbaik. Setiap komponen dipikirkan dengan matang.' }
   ])
 
+  // 6. Simpan kredensial demo di app_meta
+  await supabaseAdmin.from('app_meta').upsert({
+    key: 'demo_credentials',
+    value: { email: demoEmail, password: demoPassword }
+  })
+
   return NextResponse.json({ message: 'Akun demo dan data mock berhasil dibuat.', demo_user: { email: demoEmail, password: demoPassword } })
 }
