@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DollarSign, ShoppingCart, Package } from 'lucide-react'
@@ -31,39 +30,35 @@ type RecentSaleData = {
 }
 
 export default async function CreatorDashboard() {
-  const cookieStore = cookies()
-  const supabase = await createClient(cookieStore)
+  const { userId } = await auth()
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  if (!session) {
-    redirect('/login')
+  if (!userId) {
+    redirect('/sign-in')
   }
 
-  // Panggil fungsi RPC dengan tipe yang benar
-  const { data: stats } = await supabase.rpc('get_creator_stats', { creator_id_param: session.user.id }).single<CreatorStats>()
-  const { data: sales_data } = await supabase.rpc('get_creator_sales_last_30_days', { creator_id_param: session.user.id })
-  const { data: top_products } = await supabase.rpc('get_top_products', { creator_id_param: session.user.id })
-  const { data: recent_sales } = await supabase.rpc('get_recent_sales', { creator_id_param: session.user.id })
+  // Placeholder data
+  const stats: CreatorStats = { total_revenue: 0, sales_last_30_days: 0, total_products: 0 };
+  const sales_data: SalesData[] = [];
+  const top_products: TopProductData[] = [];
+  const recent_sales: RecentSaleData[] = [];
 
   return (
     <div className="container mx-auto p-4 md:p-8">
-      <h1 className="text-3xl font-bold mb-6">Dashboard Penjual</h1>
+      <h1 className="text-3xl font-bold mb-6">Dashboard Kreator</h1>
+      <p className="text-muted-foreground mb-6">Fungsionalitas penuh akan diimplementasikan dengan API workers.</p>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Budget Kampanye</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats?.total_revenue?.toLocaleString() || '0'}</div>
+            <div className="text-2xl font-bold">Rp {stats?.total_revenue?.toLocaleString() || '0'}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Penjualan (30 Hari)</CardTitle>
+            <CardTitle className="text-sm font-medium">Views (30 Hari)</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -72,7 +67,7 @@ export default async function CreatorDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Kampanye</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -83,28 +78,28 @@ export default async function CreatorDashboard() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>Tren Penjualan</CardTitle>
+            <CardTitle>Tren Views</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
-            <SalesChart data={sales_data as SalesData[] || []} />
+            <SalesChart data={sales_data} />
           </CardContent>
         </Card>
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Produk Terlaris</CardTitle>
+            <CardTitle>Kampanye Teratas</CardTitle>
           </CardHeader>
           <CardContent>
-            <TopProducts data={top_products as TopProductData[] || []} />
+            <TopProducts data={top_products} />
           </CardContent>
         </Card>
       </div>
        <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Aktivitas Terbaru</CardTitle>
+            <CardTitle>Aktivitas Promotor Terbaru</CardTitle>
           </CardHeader>
           <CardContent>
-            <RecentActivity data={recent_sales as RecentSaleData[] || []} />
+            <RecentActivity data={recent_sales} />
           </CardContent>
         </Card>
       </div>

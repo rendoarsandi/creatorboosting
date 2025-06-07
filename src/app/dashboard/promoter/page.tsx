@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
@@ -17,7 +17,6 @@ type SubmissionWithCampaign = {
   } | null | { title: string | null }[]
 }
 
-import type { User } from '@supabase/supabase-js'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { PromoterAnalytics } from '@/components/ui/promoter-analytics'
 
@@ -31,74 +30,20 @@ function getInitials(name: string) {
 }
 
 export default function PromoterDashboard() {
-  const [submissions, setSubmissions] = useState<SubmissionWithCampaign[]>([])
-  const [user, setUser] = useState<User | null>(null)
-  const [userName, setUserName] = useState('Pengguna')
-  const [balance, setBalance] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const { user } = useUser()
+  const { signOut } = useClerk()
+  const [submissions] = useState<SubmissionWithCampaign[]>([])
+  const [balance] = useState<number | null>(0) // Placeholder
+  const [loading] = useState(false) // Placeholder
 
-  const fetchWalletBalance = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('wallets')
-        .select('balance')
-        .eq('id', userId)
-        .single()
+  const userName = user?.fullName || user?.emailAddresses[0]?.emailAddress || 'Pengguna'
 
-      if (error) throw error
-      if (data) setBalance(data.balance)
-    } catch (error) {
-      console.error('Error fetching wallet balance:', error)
-    }
-  }, [supabase])
+  // TODO: Re-implement fetchSubmissions and fetchWalletBalance using API workers
 
-  const fetchSubmissions = useCallback(async (promoterId: string) => {
-    try {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('submissions')
-        .select(`
-          id,
-          submitted_url,
-          status,
-          tracked_views,
-          campaigns ( title )
-        `)
-        .eq('promoter_id', promoterId)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      if (data) setSubmissions(data)
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error fetching submissions:', error.message)
-      } else {
-        console.error('An unknown error occurred while fetching submissions')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [supabase])
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUser(user)
-        setUserName(user.user_metadata.full_name || user.email || 'Pengguna')
-        fetchSubmissions(user.id)
-        fetchWalletBalance(user.id)
-      } else {
-        window.location.href = '/login'
-      }
-    }
-    fetchUserData()
-  }, [supabase.auth, fetchSubmissions, fetchWalletBalance])
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/login'
+  const handleLogout = () => {
+    signOut(() => {
+      window.location.href = '/'
+    })
   }
 
   return (
@@ -140,7 +85,7 @@ export default function PromoterDashboard() {
             {/* Search bar can be added here later */}
           </div>
           <Avatar>
-            <AvatarImage src={user?.user_metadata.avatar_url} />
+            <AvatarImage src={user?.imageUrl} />
             <AvatarFallback>{getInitials(userName)}</AvatarFallback>
           </Avatar>
           <Button onClick={handleLogout} variant="outline">Keluar</Button>

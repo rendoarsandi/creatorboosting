@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useParams, useRouter } from 'next/navigation'
-import type { User } from '@supabase/supabase-js'
 
 type CampaignDetail = {
   id: string
@@ -19,55 +18,29 @@ type CampaignDetail = {
 
 export default function CampaignDetailPage() {
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
+  const [loading] = useState(false) // Changed to false as we use placeholder data
+  const { user } = useUser()
   const [submittedUrl, setSubmittedUrl] = useState('')
   const [submitLoading, setSubmitLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const params = useParams()
   const router = useRouter()
   const campaignId = params.id as string
-  const supabase = createClient()
-
-  const fetchCampaignDetails = useCallback(async () => {
-    try {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select(`
-          id,
-          title,
-          description,
-          terms,
-          rate_per_10k_views,
-          profiles ( full_name ),
-          campaign_assets ( asset_url )
-        `)
-        .eq('id', campaignId)
-        .single()
-
-      if (error) throw error
-      if (data) setCampaign(data as unknown as CampaignDetail)
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error fetching campaign details:', error.message)
-      }
-      setError('Gagal memuat detail kampanye.')
-    } finally {
-      setLoading(false)
-    }
-  }, [campaignId, supabase])
-
+  
+  // Placeholder data until the API endpoint is ready
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
     if (campaignId) {
-      fetchCampaignDetails()
+      setCampaign({
+        id: campaignId,
+        title: 'Placeholder Campaign Title',
+        description: 'This is a placeholder description for the campaign. Details will be loaded from the API.',
+        terms: 'These are placeholder terms and conditions.',
+        rate_per_10k_views: 50000,
+        profiles: { full_name: 'Placeholder Creator' },
+        campaign_assets: [{ asset_url: 'https://example.com/asset' }],
+      });
     }
-  }, [campaignId, fetchCampaignDetails, supabase.auth])
+  }, [campaignId]);
 
   const handleSubmitUrl = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,11 +68,11 @@ export default function CampaignDetailPage() {
         }),
       })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Gagal mengirimkan URL.')
-      }
+      const result = await response.json() as { error?: string };
+ 
+       if (!response.ok) {
+         throw new Error(result.error || 'Gagal mengirimkan URL.')
+       }
 
       alert('URL berhasil disubmit! Anda akan diarahkan ke dasbor Anda.')
       router.push('/dashboard/promoter')

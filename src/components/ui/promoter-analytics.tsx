@@ -19,26 +19,15 @@ interface AnalyticsData {
 export function PromoterAnalytics() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/analytics/promoter')
-        if (!response.ok) {
-          throw new Error('Gagal mengambil data analitik.')
-        }
-        const result = await response.json()
-        setData(result)
-      } catch (err) {
-        if (err instanceof Error) setError(err.message)
-        else setError('Terjadi kesalahan tidak diketahui')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
+    // Placeholder data until API is ready
+    setData({
+      summary: { totalSubmissions: 0, totalViews: 0, totalEarnings: 0 },
+      chartData: [],
+    });
+    setLoading(false);
   }, [])
 
   if (loading) {

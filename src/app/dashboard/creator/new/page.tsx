@@ -38,11 +38,11 @@ export default function NewCampaignPage() {
         body: formData,
       })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Gagal membuat kampanye.')
-      }
+      const result = await response.json() as { error?: string };
+ 
+       if (!response.ok) {
+         throw new Error(result.error || 'Gagal membuat kampanye.')
+       }
 
       alert('Kampanye berhasil dibuat!')
       router.push('/dashboard/creator')
